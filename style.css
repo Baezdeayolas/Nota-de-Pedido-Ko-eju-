@@ -428,6 +428,120 @@ main {
   color: var(--paper);
 }
 
+/* ---------- Archivo de pedidos ---------- */
+
+.archive-list {
+  padding: 6px 16px 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.archive-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.archive-card.editing {
+  border-color: var(--rust);
+  box-shadow: 0 0 0 1px var(--rust);
+}
+
+.archive-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.archive-client {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.archive-meta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.archive-total {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.archive-sub {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 6px;
+}
+
+.archive-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn-sm {
+  padding: 7px 12px;
+  font-size: 13px;
+  border-radius: 7px;
+  font-weight: 600;
+}
+
+.btn-outline.danger {
+  color: var(--red);
+  border-color: rgba(161, 61, 61, 0.4);
+}
+
+/* ---------- Banner de edición ---------- */
+
+.editing-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(185, 98, 43, 0.12);
+  border: 1px solid rgba(185, 98, 43, 0.35);
+  color: var(--rust-dark);
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin: 10px 16px 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ---------- Toast ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 90px;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 60;
+  white-space: nowrap;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* ---------- Modal ---------- */
 
 .modal-backdrop {
