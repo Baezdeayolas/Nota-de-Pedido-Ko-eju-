@@ -328,9 +328,9 @@ document.getElementById('btn-pdf').addEventListener('click', async () => {
 // ---------- Generador de PDF (sin librerías externas, 100% offline) ----------
 function generatePdfBytes(orderState) {
   const marginLeft = 40;
-  const marginTop = 802;
+  const marginTop = 800;
   const marginBottom = 50;
-  const rowHeight = 14;
+  const rowHeight = 18;
 
   const pages = [];
   let currentLines = [];
@@ -342,14 +342,14 @@ function generatePdfBytes(orderState) {
   }
 
   function drawTableHeader() {
-    currentLines.push({ x: marginLeft, y, size: 9, bold: true, font: 'mono', text: padCol('CÓDIGO', 10) });
-    currentLines.push({ x: marginLeft + 62, y, size: 9, bold: true, font: 'sans', text: 'DESCRIPCIÓN' });
-    currentLines.push({ x: 330, y, size: 9, bold: true, font: 'mono', text: padCol('CANT.', 5, true) });
-    currentLines.push({ x: 365, y, size: 9, bold: true, font: 'mono', text: padCol('PRECIO', 12, true) });
-    currentLines.push({ x: 435, y, size: 9, bold: true, font: 'mono', text: padCol('SUBTOTAL', 13, true) });
-    y -= 10;
-    currentLines.push({ x: marginLeft, y, size: 8, bold: false, font: 'mono', text: '-'.repeat(70) });
-    y -= 14;
+    currentLines.push({ x: marginLeft, y, size: 11, bold: true, font: 'mono', text: padCol('CÓDIGO', 10) });
+    currentLines.push({ x: marginLeft + 68, y, size: 11, bold: true, font: 'sans', text: 'DESCRIPCIÓN' });
+    currentLines.push({ x: 335, y, size: 11, bold: true, font: 'mono', text: padCol('CANT.', 5, true) });
+    currentLines.push({ x: 375, y, size: 11, bold: true, font: 'mono', text: padCol('PRECIO', 12, true) });
+    currentLines.push({ x: 462, y, size: 11, bold: true, font: 'mono', text: padCol('SUBTOTAL', 13, true) });
+    y -= 12;
+    currentLines.push({ x: marginLeft, y, size: 9, bold: false, font: 'mono', text: '-'.repeat(80) });
+    y -= 18;
   }
 
   function ensureSpace() {
@@ -360,14 +360,14 @@ function generatePdfBytes(orderState) {
     }
   }
 
-  currentLines.push({ x: marginLeft, y, size: 16, bold: true, font: 'sans', text: 'PEDIDO' });
-  y -= 22;
-  currentLines.push({ x: marginLeft, y, size: 10, bold: false, font: 'sans', text: `Vendedor: ${orderState.vendedor || '-'}` });
-  y -= 14;
-  currentLines.push({ x: marginLeft, y, size: 10, bold: false, font: 'sans', text: `Cliente: ${orderState.cliente || '-'}` });
-  y -= 14;
-  currentLines.push({ x: marginLeft, y, size: 10, bold: false, font: 'sans', text: `Fecha: ${new Date().toLocaleDateString('es-PY')}` });
-  y -= 20;
+  currentLines.push({ x: marginLeft, y, size: 19, bold: true, font: 'sans', text: 'PEDIDO' });
+  y -= 26;
+  currentLines.push({ x: marginLeft, y, size: 12, bold: false, font: 'sans', text: `Vendedor: ${orderState.vendedor || '-'}` });
+  y -= 17;
+  currentLines.push({ x: marginLeft, y, size: 12, bold: false, font: 'sans', text: `Cliente: ${orderState.cliente || '-'}` });
+  y -= 17;
+  currentLines.push({ x: marginLeft, y, size: 12, bold: false, font: 'sans', text: `Fecha: ${new Date().toLocaleDateString('es-PY')}` });
+  y -= 26;
   drawTableHeader();
 
   orderState.lines.forEach((line) => {
@@ -376,21 +376,21 @@ function generatePdfBytes(orderState) {
     const price = priceOf(item, line.tier);
     const subtotal = price * line.qty;
     ensureSpace();
-    currentLines.push({ x: marginLeft, y, size: 8.5, bold: false, font: 'mono', text: padCol(item.c, 10) });
-    currentLines.push({ x: marginLeft + 62, y, size: 8.5, bold: false, font: 'sans', text: truncate(item.d, 40) });
-    currentLines.push({ x: 330, y, size: 8.5, bold: false, font: 'mono', text: padCol(String(line.qty), 5, true) });
-    currentLines.push({ x: 365, y, size: 8.5, bold: false, font: 'mono', text: padCol(fmtMoney(price), 12, true) });
-    currentLines.push({ x: 435, y, size: 8.5, bold: false, font: 'mono', text: padCol(fmtMoney(subtotal), 13, true) });
+    currentLines.push({ x: marginLeft, y, size: 10.5, bold: false, font: 'mono', text: padCol(item.c, 10) });
+    currentLines.push({ x: marginLeft + 68, y, size: 10.5, bold: false, font: 'sans', text: truncate(item.d, 33) });
+    currentLines.push({ x: 335, y, size: 10.5, bold: false, font: 'mono', text: padCol(String(line.qty), 5, true) });
+    currentLines.push({ x: 375, y, size: 10.5, bold: false, font: 'mono', text: padCol(fmtMoney(price), 12, true) });
+    currentLines.push({ x: 462, y, size: 10.5, bold: false, font: 'mono', text: padCol(fmtMoney(subtotal), 13, true) });
     y -= rowHeight;
   });
 
-  if (y - 30 < marginBottom) {
+  if (y - 40 < marginBottom) {
     pushPage();
     y = marginTop;
   }
-  y -= 16;
-  currentLines.push({ x: 365, y, size: 11, bold: true, font: 'sans', text: 'TOTAL' });
-  currentLines.push({ x: 435, y, size: 11, bold: true, font: 'mono', text: padCol('Gs. ' + fmtMoney(grandTotal()), 16, true) });
+  y -= 22;
+  currentLines.push({ x: 375, y, size: 14, bold: true, font: 'sans', text: 'TOTAL' });
+  currentLines.push({ x: 462, y, size: 14, bold: true, font: 'mono', text: padCol('Gs. ' + fmtMoney(grandTotal()), 16, true) });
 
   pushPage();
   return buildPdfFromPages(pages);
