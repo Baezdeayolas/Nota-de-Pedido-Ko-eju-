@@ -37,6 +37,7 @@
 <nav class="tabs">
   <button class="tab-btn active" data-panel="panel-search">Buscar</button>
   <button class="tab-btn" data-panel="panel-order">Pedido <span class="count" id="tab-order-count">0</span></button>
+  <button class="tab-btn" data-panel="panel-archive">Archivo <span class="count" id="tab-archive-count">0</span></button>
 </nav>
 
 <main>
@@ -49,10 +50,22 @@
   </section>
 
   <section id="panel-order" class="panel">
+    <div class="editing-banner" id="editing-banner" style="display:none;">
+      <span id="editing-banner-text"></span>
+      <button id="editing-banner-exit" class="btn-outline btn-sm">Salir</button>
+    </div>
     <div class="order-list" id="order-list"></div>
     <div class="empty-state" id="order-empty">
       <div class="big">Todavía no agregaste artículos</div>
       <div>Buscá por código o descripción en la pestaña "Buscar".</div>
+    </div>
+  </section>
+
+  <section id="panel-archive" class="panel">
+    <div class="archive-list" id="archive-list"></div>
+    <div class="empty-state" id="archive-empty">
+      <div class="big">Todavía no archivaste ningún pedido</div>
+      <div>Cuando toques "Nuevo" con un pedido cargado, queda guardado acá.</div>
     </div>
   </section>
 </main>
@@ -67,6 +80,8 @@
     <button class="btn btn-primary" id="btn-pdf">Compartir PDF</button>
   </div>
 </footer>
+
+<div class="toast" id="toast"></div>
 
 <!-- Modal genérico -->
 <div class="modal-backdrop" id="modal-backdrop">
