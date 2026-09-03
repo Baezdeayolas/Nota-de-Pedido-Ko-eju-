@@ -274,65 +274,211 @@ document.getElementById('btn-clear').addEventListener('click', () => {
   );
 });
 
-// ---------- Generar PDF (vía impresión del navegador) ----------
-document.getElementById('btn-pdf').addEventListener('click', () => {
+// ---------- Generar y compartir PDF (sin pasar por "guardar" primero) ----------
+document.getElementById('btn-pdf').addEventListener('click', async () => {
   if (!state.lines.length) {
     openModal('El pedido está vacío', 'Agregá al menos un artículo antes de generar el comprobante.', [
       { label: 'Entendido', variant: 'primary', action: closeModal },
     ]);
     return;
   }
-  buildPrintSheet();
-  window.print();
+
+  const btn = document.getElementById('btn-pdf');
+  const originalLabel = btn.textContent;
+  btn.textContent = 'Generando...';
+  btn.disabled = true;
+
+  try {
+    const bytes = generatePdfBytes(state);
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const fecha = new Date().toISOString().slice(0, 10);
+    const clienteSlug = (state.cliente || 'pedido').trim().replace(/\s+/g, '_').replace(/[^\w-]/g, '');
+    const fileName = `pedido_${clienteSlug || 'sin_cliente'}_${fecha}.pdf`;
+    const file = new File([blob], fileName, { type: 'application/pdf' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: 'Pedido',
+          text: `Pedido${state.cliente ? ' - ' + state.cliente : ''}`,
+        });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return; // el usuario cerró el panel de compartir
+        // si falla el share por otro motivo, seguimos con la descarga directa
+      }
+    }
+
+    // Fallback: navegadores sin Web Share API con archivos (ej. desktop) -> se descarga directo
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } finally {
+    btn.textContent = originalLabel;
+    btn.disabled = false;
+  }
 });
 
-function buildPrintSheet() {
-  const sheet = document.getElementById('print-sheet');
-  const today = new Date();
-  const fecha = today.toLocaleDateString('es-PY');
-  const rows = state.lines
-    .map((line) => {
-      const item = byCode.get(line.code);
-      if (!item) return '';
-      const price = priceOf(item, line.tier);
-      const subtotal = price * line.qty;
-      return `
-        <tr>
-          <td>${escapeHtml(item.c)}</td>
-          <td>${escapeHtml(item.d)}</td>
-          <td class="num">${line.qty}</td>
-          <td class="num">Gs. ${fmtMoney(price)}</td>
-          <td class="num">Gs. ${fmtMoney(subtotal)}</td>
-        </tr>
-      `;
-    })
-    .join('');
+// ---------- Generador de PDF (sin librerías externas, 100% offline) ----------
+function generatePdfBytes(orderState) {
+  const marginLeft = 40;
+  const marginTop = 802;
+  const marginBottom = 50;
+  const rowHeight = 14;
 
-  sheet.innerHTML = `
-    <div class="print-header">
-      <div>
-        <h2>Pedido</h2>
-        <div class="print-meta">
-          Vendedor: ${escapeHtml(state.vendedor || '-')}<br>
-          Cliente: ${escapeHtml(state.cliente || '-')}
-        </div>
-      </div>
-      <div class="print-meta">Fecha: ${fecha}</div>
-    </div>
-    <table class="print-table">
-      <thead>
-        <tr>
-          <th>Código</th>
-          <th>Descripción</th>
-          <th class="num">Cant.</th>
-          <th class="num">Precio</th>
-          <th class="num">Subtotal</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <div class="print-total">Total: Gs. ${fmtMoney(grandTotal())}</div>
-  `;
+  const pages = [];
+  let currentLines = [];
+  let y = marginTop;
+
+  function pushPage() {
+    if (currentLines.length) pages.push(currentLines);
+    currentLines = [];
+  }
+
+  function drawTableHeader() {
+    currentLines.push({ x: marginLeft, y, size: 9, bold: true, font: 'mono', text: padCol('CÓDIGO', 10) });
+    currentLines.push({ x: marginLeft + 62, y, size: 9, bold: true, font: 'sans', text: 'DESCRIPCIÓN' });
+    currentLines.push({ x: 330, y, size: 9, bold: true, font: 'mono', text: padCol('CANT.', 5, true) });
+    currentLines.push({ x: 365, y, size: 9, bold: true, font: 'mono', text: padCol('PRECIO', 12, true) });
+    currentLines.push({ x: 435, y, size: 9, bold: true, font: 'mono', text: padCol('SUBTOTAL', 13, true) });
+    y -= 10;
+    currentLines.push({ x: marginLeft, y, size: 8, bold: false, font: 'mono', text: '-'.repeat(70) });
+    y -= 14;
+  }
+
+  function ensureSpace() {
+    if (y - rowHeight < marginBottom) {
+      pushPage();
+      y = marginTop;
+      drawTableHeader();
+    }
+  }
+
+  currentLines.push({ x: marginLeft, y, size: 16, bold: true, font: 'sans', text: 'PEDIDO' });
+  y -= 22;
+  currentLines.push({ x: marginLeft, y, size: 10, bold: false, font: 'sans', text: `Vendedor: ${orderState.vendedor || '-'}` });
+  y -= 14;
+  currentLines.push({ x: marginLeft, y, size: 10, bold: false, font: 'sans', text: `Cliente: ${orderState.cliente || '-'}` });
+  y -= 14;
+  currentLines.push({ x: marginLeft, y, size: 10, bold: false, font: 'sans', text: `Fecha: ${new Date().toLocaleDateString('es-PY')}` });
+  y -= 20;
+  drawTableHeader();
+
+  orderState.lines.forEach((line) => {
+    const item = byCode.get(line.code);
+    if (!item) return;
+    const price = priceOf(item, line.tier);
+    const subtotal = price * line.qty;
+    ensureSpace();
+    currentLines.push({ x: marginLeft, y, size: 8.5, bold: false, font: 'mono', text: padCol(item.c, 10) });
+    currentLines.push({ x: marginLeft + 62, y, size: 8.5, bold: false, font: 'sans', text: truncate(item.d, 40) });
+    currentLines.push({ x: 330, y, size: 8.5, bold: false, font: 'mono', text: padCol(String(line.qty), 5, true) });
+    currentLines.push({ x: 365, y, size: 8.5, bold: false, font: 'mono', text: padCol(fmtMoney(price), 12, true) });
+    currentLines.push({ x: 435, y, size: 8.5, bold: false, font: 'mono', text: padCol(fmtMoney(subtotal), 13, true) });
+    y -= rowHeight;
+  });
+
+  if (y - 30 < marginBottom) {
+    pushPage();
+    y = marginTop;
+  }
+  y -= 16;
+  currentLines.push({ x: 365, y, size: 11, bold: true, font: 'sans', text: 'TOTAL' });
+  currentLines.push({ x: 435, y, size: 11, bold: true, font: 'mono', text: padCol('Gs. ' + fmtMoney(grandTotal()), 16, true) });
+
+  pushPage();
+  return buildPdfFromPages(pages);
+}
+
+function padCol(str, width, right) {
+  str = String(str);
+  if (str.length > width) str = str.slice(0, width);
+  return right ? str.padStart(width, ' ') : str.padEnd(width, ' ');
+}
+
+function truncate(str, max) {
+  str = String(str);
+  return str.length > max ? str.slice(0, max - 1) + '...' : str;
+}
+
+function buildPdfFromPages(pages) {
+  const objects = [];
+  objects[0] = null; // 1: Catalog
+  objects[1] = null; // 2: Pages
+  objects[2] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>'; // 3: F1
+  objects[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>'; // 4: F2
+  objects[4] = '<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>'; // 5: F3
+  objects[5] = '<< /Type /Font /Subtype /Type1 /BaseFont /Courier-Bold /Encoding /WinAnsiEncoding >>'; // 6: F4
+
+  const kids = [];
+  pages.forEach((lines) => {
+    const content = buildContentStream(lines);
+    const contentObjNum = objects.length + 1;
+    objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
+    const pageObjNum = objects.length + 1;
+    objects.push(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R >> >> /Contents ${contentObjNum} 0 R >>`
+    );
+    kids.push(pageObjNum);
+  });
+
+  objects[1] = `<< /Type /Pages /Kids [${kids.map((k) => k + ' 0 R').join(' ')}] /Count ${kids.length} >>`;
+  objects[0] = '<< /Type /Catalog /Pages 2 0 R >>';
+
+  return assemblePdf(objects);
+}
+
+function buildContentStream(lines) {
+  let out = 'BT\n';
+  lines.forEach((l) => {
+    const fontTag = l.font === 'mono' ? (l.bold ? '/F4' : '/F3') : l.bold ? '/F2' : '/F1';
+    out += `${fontTag} ${l.size} Tf\n`;
+    out += `1 0 0 1 ${l.x} ${l.y} Tm\n`;
+    out += `(${pdfEscapeText(l.text)}) Tj\n`;
+  });
+  out += 'ET';
+  return out;
+}
+
+function assemblePdf(objects) {
+  const objStrs = objects.map((body, idx) => `${idx + 1} 0 obj\n${body}\nendobj\n`);
+  let out = '%PDF-1.4\n';
+  const offsets = [];
+  objStrs.forEach((s) => {
+    offsets.push(out.length);
+    out += s;
+  });
+  const xrefStart = out.length;
+  out += `xref\n0 ${objStrs.length + 1}\n0000000000 65535 f \n`;
+  offsets.forEach((off) => {
+    out += String(off).padStart(10, '0') + ' 00000 n \n';
+  });
+  out += `trailer\n<< /Size ${objStrs.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+  return strToBytes(out);
+}
+
+function strToBytes(str) {
+  const bytes = new Uint8Array(str.length);
+  for (let i = 0; i < str.length; i++) bytes[i] = str.charCodeAt(i) & 0xff;
+  return bytes;
+}
+
+function pdfEscapeText(str) {
+  let out = '';
+  for (let i = 0; i < str.length; i++) {
+    let code = str.charCodeAt(i);
+    if (code > 0xff) code = 0x3f; // caracteres fuera de Latin-1 -> '?'
+    const c = String.fromCharCode(code);
+    if (c === '(' || c === ')' || c === '\\') out += '\\' + c;
+    else out += c;
+  }
+  return out;
 }
 
 // ---------- Modal genérico ----------
