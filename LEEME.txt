@@ -1,0 +1,82 @@
+PEDIDOS KO'EJU RORY — App web instalable para Android
+========================================================
+
+QUÉ ES
+------
+Una app web (PWA) con los 9.069 artículos de tu lista de precios
+(código, código de barra, descripción, stock CENTRAL, stock CDE y
+3 niveles de precio). El vendedor busca un artículo, ve su
+descripción/stock/precio, lo agrega al pedido, y al terminar genera
+un comprobante en PDF.
+
+Funciona sin conexión a internet una vez instalada, y no depende de
+ningún servidor: todos los datos viven dentro de la app.
+
+IMPORTANTE sobre el formato del archivo:
+- Es un ".apk" no es posible generarlo sin un entorno de desarrollo
+  Android (Android Studio / Gradle), que no está disponible en este
+  chat. Esta app web cumple la misma función y se instala en el
+  celular como un ícono más, a pantalla completa.
+- Los precios están en guaraníes (Gs.), tal cual figuran en las
+  columnas "1", "2" y "3" del Excel original.
+- El stock que ves es una FOTO del momento en que se exportó el
+  Excel (no se actualiza solo). Cuando tengas una lista nueva, te
+  genero un data.js actualizado y lo reemplazás (ver abajo).
+
+CÓMO INSTALARLA EN UN CELULAR ANDROID
+--------------------------------------
+Necesitás subir esta carpeta a algún lugar accesible por internet
+(no puede abrirse como PWA instalable directo desde archivos locales).
+Opciones simples y gratuitas:
+
+Opción A — GitHub Pages (recomendada, gratis):
+ 1. Creá una cuenta en github.com si no tenés.
+ 2. Creá un repositorio nuevo (puede ser privado o público).
+ 3. Subí TODOS los archivos de esta carpeta (index.html, app.js,
+    data.js, style.css, manifest.json, service-worker.js, icons/).
+ 4. Andá a Settings → Pages → activá GitHub Pages en la rama
+    "main" / carpeta raíz.
+ 5. GitHub te da un link tipo:
+    https://tuusuario.github.io/nombre-repo/
+ 6. Abrí ese link desde Chrome en el celular Android.
+
+Opción B — Netlify Drop (más rápido, sin cuenta):
+ 1. Entrá a https://app.netlify.com/drop desde una computadora.
+ 2. Arrastrá esta carpeta completa a la página.
+ 3. Te da un link público al instante. Abrilo en el Android.
+
+UNA VEZ ABIERTO EL LINK EN CHROME (ANDROID):
+ 1. Tocá el menú (⋮) arriba a la derecha.
+ 2. Elegí "Instalar aplicación" o "Agregar a pantalla de inicio".
+ 3. Confirmá. Va a aparecer un ícono como cualquier app instalada,
+    y abre a pantalla completa sin la barra del navegador.
+ 4. A partir de ahí funciona sin internet (los datos ya quedan
+    guardados en el celular).
+
+CÓMO SE GENERA EL PDF
+----------------------
+Al tocar "Generar PDF", la app abre el diálogo de impresión de
+Android. Ahí el vendedor elige como "impresora" la opción
+"Guardar como PDF" y confirma. El archivo PDF queda guardado en el
+celular (carpeta Descargas) listo para compartir por WhatsApp,
+correo, etc. No requiere internet ni ninguna librería externa.
+
+CÓMO ACTUALIZAR LA LISTA DE PRECIOS/STOCK
+------------------------------------------
+Cuando tengas un Excel nuevo, pasámelo y te genero un archivo
+data.js actualizado. Solo hay que reemplazar ese archivo en el
+repositorio/carpeta publicada — el resto de la app no cambia.
+
+QUÉ HACE CADA PANTALLA
+------------------------
+- Encabezado: nombre de vendedor y cliente (se usan en el PDF).
+- Selector de precio (1/2/3): define qué precio se usa por defecto
+  al agregar artículos nuevos. Cada línea del pedido puede después
+  cambiarse a otro precio de forma individual.
+- Pestaña "Buscar": buscá por código, código de barra o parte de la
+  descripción. Cada resultado muestra stock CENTRAL y CDE, precio,
+  y un botón para agregar con la cantidad elegida.
+- Pestaña "Pedido": lista de líneas cargadas, cada una editable
+  (cantidad, precio) y con botón para quitarla.
+- Pie fijo: total del pedido en tiempo real + botón "Generar PDF".
+- "Nuevo": vacía el pedido actual (pide confirmación).
