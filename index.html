@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Pedidos Ko'eju Rory</title>
+<meta name="theme-color" content="#20302B">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">
+    <h1>Pedidos</h1>
+    <span>Ko'eju Rory S.A.</span>
+  </div>
+  <div class="meta-fields">
+    <input id="vendedor-input" type="text" placeholder="Vendedor">
+    <input id="cliente-input" type="text" placeholder="Cliente">
+  </div>
+</header>
+
+<div class="tier-row">
+  <span class="tier-label">Precio</span>
+  <div class="tier-options">
+    <button class="tier-btn active" data-tier="1">1</button>
+    <button class="tier-btn" data-tier="2">2</button>
+    <button class="tier-btn" data-tier="3">3</button>
+  </div>
+</div>
+
+<div class="condicion-row">
+  <span class="tier-label">Condición</span>
+  <div class="condicion-quick">
+    <button type="button" class="tier-btn" data-condicion="Contado">Contado</button>
+    <button type="button" class="tier-btn" data-condicion="Crédito">Crédito</button>
+  </div>
+  <input id="condicion-input" type="text" class="condicion-input" placeholder="Escribir...">
+</div>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-panel="panel-search">Buscar</button>
+  <button class="tab-btn" data-panel="panel-order">Pedido <span class="count" id="tab-order-count">0</span></button>
+  <button class="tab-btn" data-panel="panel-archive">Archivo <span class="count" id="tab-archive-count">0</span></button>
+</nav>
+
+<main>
+  <section id="panel-search" class="panel active">
+    <div class="search-wrap">
+      <input id="search-input" type="text" inputmode="search" placeholder="Código, código de barra o descripción...">
+    </div>
+    <div class="result-count" id="result-count"></div>
+    <div class="item-list" id="item-list"></div>
+  </section>
+
+  <section id="panel-order" class="panel">
+    <div class="editing-banner" id="editing-banner" style="display:none;">
+      <span id="editing-banner-text"></span>
+      <button id="editing-banner-exit" class="btn-outline btn-sm">Salir</button>
+    </div>
+    <div class="order-list" id="order-list"></div>
+    <div class="empty-state" id="order-empty">
+      <div class="big">Todavía no agregaste artículos</div>
+      <div>Buscá por código o descripción en la pestaña "Buscar".</div>
+    </div>
+  </section>
+
+  <section id="panel-archive" class="panel">
+    <div class="archive-list" id="archive-list"></div>
+    <div class="empty-state" id="archive-empty">
+      <div class="big">Todavía no archivaste ningún pedido</div>
+      <div>Cuando toques "Nuevo" con un pedido cargado, queda guardado acá.</div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="total-block">
+    <div class="total-label">Total pedido</div>
+    <div class="total-value" id="total-value">Gs. 0</div>
+  </div>
+  <div class="footer-actions">
+    <button class="btn btn-ghost" id="btn-clear">Nuevo</button>
+    <button class="btn btn-primary" id="btn-pdf">Compartir PDF</button>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<!-- Modal genérico -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal-sheet">
+    <h3 id="modal-title"></h3>
+    <p id="modal-text"></p>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
