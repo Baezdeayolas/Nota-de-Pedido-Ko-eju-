@@ -1,0 +1,151 @@
+PEDIDOS KO'EJU RORY — App web instalable para Android
+========================================================
+
+QUÉ ES
+------
+Una app web (PWA) con los 9.069 artículos de tu lista de precios
+(código, código de barra, descripción, stock CENTRAL, stock CDE y
+3 niveles de precio). El vendedor busca un artículo, ve su
+descripción/stock/precio, lo agrega al pedido, y al terminar genera
+un comprobante en PDF.
+
+Funciona sin conexión a internet una vez instalada, y no depende de
+ningún servidor: todos los datos viven dentro de la app.
+
+IMPORTANTE sobre el formato del archivo:
+- Es un ".apk" no es posible generarlo sin un entorno de desarrollo
+  Android (Android Studio / Gradle), que no está disponible en este
+  chat. Esta app web cumple la misma función y se instala en el
+  celular como un ícono más, a pantalla completa.
+- Los precios están en guaraníes (Gs.), tal cual figuran en las
+  columnas "1", "2" y "3" del Excel original.
+- El stock que ves es una FOTO del momento en que se exportó el
+  Excel (no se actualiza solo). Cuando tengas una lista nueva, te
+  genero un data.js actualizado y lo reemplazás (ver abajo).
+
+CÓMO INSTALARLA EN UN CELULAR ANDROID
+--------------------------------------
+Necesitás subir esta carpeta a algún lugar accesible por internet
+(no puede abrirse como PWA instalable directo desde archivos locales).
+Opciones simples y gratuitas:
+
+Opción A — GitHub Pages (recomendada, gratis):
+ 1. Creá una cuenta en github.com si no tenés.
+ 2. Creá un repositorio nuevo (puede ser privado o público).
+ 3. Subí TODOS los archivos de esta carpeta (index.html, app.js,
+    data.js, style.css, manifest.json, service-worker.js, icons/).
+ 4. Andá a Settings → Pages → activá GitHub Pages en la rama
+    "main" / carpeta raíz.
+ 5. GitHub te da un link tipo:
+    https://tuusuario.github.io/nombre-repo/
+ 6. Abrí ese link desde Chrome en el celular Android.
+
+Opción B — Netlify Drop (más rápido, sin cuenta):
+ 1. Entrá a https://app.netlify.com/drop desde una computadora.
+ 2. Arrastrá esta carpeta completa a la página.
+ 3. Te da un link público al instante. Abrilo en el Android.
+
+UNA VEZ ABIERTO EL LINK EN CHROME (ANDROID):
+ 1. Tocá el menú (⋮) arriba a la derecha.
+ 2. Elegí "Instalar aplicación" o "Agregar a pantalla de inicio".
+ 3. Confirmá. Va a aparecer un ícono como cualquier app instalada,
+    y abre a pantalla completa sin la barra del navegador.
+ 4. A partir de ahí funciona sin internet (los datos ya quedan
+    guardados en el celular).
+
+CÓMO SE GENERA Y COMPARTE EL PDF
+----------------------------------
+Al tocar "Compartir PDF", la app genera el archivo al instante
+(sin depender de ninguna librería externa, funciona sin internet)
+y abre directamente el panel nativo de "Compartir" de Android:
+desde ahí el vendedor elige WhatsApp, correo, Drive, Bluetooth,
+etc., sin tener que guardarlo primero.
+
+El PDF está diseñado calcando el formato del sistema de la
+empresa: título centrado ("PEDIDO"), datos del cliente en dos
+columnas (Razón Social/Cód.Cliente/Ciudad y Fecha/Cond.Venta/
+Vendedor/Lista de precio), tabla con Cód.Artículo/Cantidad/
+Concepto/P.Unit./Total, y recuadro para el Total General.
+No incluye número de comprobante correlativo (NRO.), porque la
+app no tiene una numeración central compartida entre celulares —
+cada vendedor genera los suyos por separado. En "Ciudad" muestra
+la ciudad del cliente (lo único que tenemos cargado), no una
+dirección completa.
+
+Si el celular o navegador no soporta compartir archivos
+directamente (poco común, pasa en algunos navegadores de
+escritorio), la app descarga el PDF directo a la carpeta
+Descargas como respaldo.
+
+CÓMO ACTUALIZAR LA LISTA DE PRECIOS/STOCK
+------------------------------------------
+Cuando tengas un Excel nuevo, pasámelo y te genero un archivo
+data.js actualizado. Solo hay que reemplazar ese archivo en el
+repositorio/carpeta publicada — el resto de la app no cambia.
+
+CÓMO ACTUALIZAR LA LISTA DE CLIENTES
+---------------------------------------
+Igual que con precios/stock: pasame el Excel nuevo de clientes y te
+genero un clientes.js actualizado para reemplazar en el repo.
+
+QUÉ HACE CADA PANTALLA
+------------------------
+- Encabezado: selector de vendedor con tres opciones fijas (ABEL
+  BÁEZ TLM / INTERIOR / VISITAS) y campo de cliente con búsqueda:
+  al escribir código o parte del nombre aparece una lista para
+  elegir (3.494 clientes cargados). También se puede escribir un
+  nombre que no esté en la lista, a mano libre. Al elegir un
+  cliente de la lista, su código y ciudad quedan guardados; el
+  código aparece en el PDF (si se escribe el cliente a mano, ese
+  campo queda vacío). La ciudad se sigue viendo en la pestaña
+  Archivo, pero ya no sale en el PDF.
+- Condición de venta: botones rápidos "Contado" / "Crédito" que
+  llenan el campo, pero también se puede escribir cualquier cosa a
+  mano (ej. "Crédito 30 días", "Cheque"). Se reinicia junto con el
+  cliente al tocar "Nuevo". Aparece en el PDF.
+- Selector de precio (M1/M2/M3): define qué precio se usa por
+  defecto al agregar artículos nuevos. Cada línea del pedido puede
+  después cambiarse a otra lista de forma individual. La lista
+  seleccionada aparece en el PDF (línea "Lista de precio: M_").
+- Selector de estado (Pendiente / Confirmado): marca si el pedido
+  ya quedó confirmado por el cliente. Si está en "Confirmado", en
+  el PDF aparece el texto "PEDIDO CONFIRMADO" bien debajo de todo,
+  después del Total General. Se reinicia en "Pendiente" con cada
+  pedido nuevo (igual que Cliente y Condición).
+- Pestaña "Buscar": buscá por código, código de barra o parte de la
+  descripción. Cada resultado muestra stock CENTRAL y CDE, precio,
+  y un botón para agregar con la cantidad elegida.
+- Pestaña "Pedido": lista de líneas cargadas, cada una editable
+  (cantidad, precio) y con botón para quitarla.
+- Pestaña "Archivo": arriba de todo muestra el total general
+  sumando TODOS los pedidos archivados, junto con la cantidad de
+  pedidos, y un botón "Vaciar". Debajo, todos los pedidos que ya
+  armaste antes. Cada uno muestra cliente, vendedor, fecha,
+  cantidad de artículos y total, con tres botones:
+    • Editar: retoma ese pedido para seguir modificándolo. Mientras
+      lo estés editando, cualquier cambio (cantidad, precio, agregar
+      o quitar artículos) se guarda solo, en vivo, en ese mismo
+      registro del archivo. Si le sacás todos los artículos, se
+      borra del archivo automáticamente.
+    • Reutilizar: carga los mismos artículos y cliente como punto de
+      partida de un pedido NUEVO e independiente (no toca el pedido
+      original archivado). Ideal para pedidos que se repiten.
+    • Eliminar: borra ese pedido del archivo para siempre (pide
+      confirmación).
+  "Vaciar": saca TODOS los pedidos archivados de esta lista y los
+  manda a "Histórico" — no se borra nada, solo se sacan de acá para
+  no acumular tantas tarjetas. Cada vez que volvés a tocar "Vaciar",
+  lo nuevo se suma a lo que ya había en el Histórico.
+- Histórico (debajo del Archivo): aparece solo si ya vaciaste el
+  archivo alguna vez. Un botón muestra cuántos pedidos hay ahí y la
+  suma de todos ellos ("Histórico (12 pedidos · Gs. 4.500.000)");
+  al tocarlo se despliega la lista completa. Desde ahí se puede
+  "Reutilizar" un pedido viejo (como punto de partida de uno nuevo)
+  o "Eliminar" definitivamente (esta sí borra para siempre, sin
+  posibilidad de deshacer).
+- Pie fijo: total del pedido en tiempo real + botón "Compartir PDF".
+- "Nuevo": si el pedido actual tiene artículos y no estás en modo
+  edición, lo archiva automáticamente y empieza uno en blanco
+  (mantiene el nombre del vendedor, pide cliente de nuevo, vuelve a
+  "Pendiente"). Ya no se pierde nada: todo pedido con al menos un
+  artículo queda guardado en la pestaña Archivo.
