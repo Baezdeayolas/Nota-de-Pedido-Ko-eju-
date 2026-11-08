@@ -1561,14 +1561,16 @@ function generatePdfBytes(orderState) {
     const price = priceOf(item, line.tier);
     const subtotal = price * line.qty;
     ensureSpace();
-    const rowTop = y + 5;
-    const rowBottom = y - 9;
-    addText(marginLeft + 4, y, 7, false, truncate(item.c, 15));
-    addRight(colCant - 5, y, 7, false, String(line.qty));
+    // Centrar verticalmente el contenido dentro de cada celda.
+    const rowTop = y + 7;
+    const rowBottom = y - 7;
+    const textY = y - 2;
+    addText(marginLeft + 4, textY, 7, false, truncate(item.c, 15));
+    addRight(colCant - 5, textY, 7, false, String(line.qty));
     const concepto = `${item.b ? item.b + ' - ' : ''}${item.d}`;
-    addText(colConcepto + 4, y, 7, false, truncate(concepto, 55));
-    addRight(colPrecio - 5, y, 7, false, fmtMoney(price));
-    addRight(colTotal - 5, y, 7, false, fmtMoney(subtotal));
+    addText(colConcepto + 4, textY, 7, false, truncate(concepto, 55));
+    addRight(colPrecio - 5, textY, 7, false, fmtMoney(price));
+    addRight(colTotal - 5, textY, 7, false, fmtMoney(subtotal));
     drawTableRow(rowTop, rowBottom);
     y -= rowHeight;
   });
