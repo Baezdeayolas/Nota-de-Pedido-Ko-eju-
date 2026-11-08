@@ -1474,14 +1474,24 @@ function generatePdfBytes(orderState) {
   const colPrecio = 478; // borde derecho de P.Unit.
   const colTotal = marginRight; // borde derecho de Total
 
+  // Límites de las columnas para dibujar una grilla de celdas en los artículos.
+  const tableCols = [marginLeft, 120, 170, 405, 485, marginRight];
+
+  function drawTableRow(top, bottom) {
+    addRule(marginLeft, top, marginRight);
+    addRule(marginLeft, bottom, marginRight);
+    tableCols.forEach((x) => addVRule(x, bottom, top));
+  }
+
   function drawTableHeader() {
-    addText(marginLeft, y, 8, false, 'Cód.Artículo');
-    addText(130, y, 8, false, 'Cantidad');
-    addText(colConcepto, y, 8, false, 'Concepto');
-    addText(420, y, 8, false, 'P.Unit.');
-    addRight(colTotal, y, 8, false, 'Total');
-    y -= 8;
-    addRule(marginLeft, y, marginRight);
+    const top = y + 6;
+    const bottom = y - 8;
+    addText(marginLeft + 4, y - 2, 8, false, 'Cód.Artículo');
+    addCenter((tableCols[1] + tableCols[2]) / 2, y - 2, 8, false, 'Cantidad');
+    addText(colConcepto + 4, y - 2, 8, false, 'Concepto');
+    addCenter((tableCols[3] + tableCols[4]) / 2, y - 2, 8, false, 'P.Unit.');
+    addCenter((tableCols[4] + tableCols[5]) / 2, y - 2, 8, false, 'Total');
+    drawTableRow(top, bottom);
     y -= 14;
   }
 
@@ -1495,7 +1505,7 @@ function generatePdfBytes(orderState) {
 
   // ---- Título ----
   const ahora = new Date();
-  addCenter(297.5, y, 12, true, 'PEDIDO');
+  addCenter(297.5, y, 12, true, 'NOTA DE PEDIDO');
   y -= 20;
   addRule(marginLeft, y, marginRight);
   y -= 16;
@@ -1551,12 +1561,15 @@ function generatePdfBytes(orderState) {
     const price = priceOf(item, line.tier);
     const subtotal = price * line.qty;
     ensureSpace();
-    addText(marginLeft, y, 7, false, item.c);
-    addRight(colCant, y, 7, false, String(line.qty));
+    const rowTop = y + 5;
+    const rowBottom = y - 9;
+    addText(marginLeft + 4, y, 7, false, truncate(item.c, 15));
+    addRight(colCant - 5, y, 7, false, String(line.qty));
     const concepto = `${item.b ? item.b + ' - ' : ''}${item.d}`;
-    addText(colConcepto, y, 7, false, truncate(concepto, 55));
-    addRight(colPrecio, y, 7, false, fmtMoney(price));
-    addRight(colTotal, y, 7, false, fmtMoney(subtotal));
+    addText(colConcepto + 4, y, 7, false, truncate(concepto, 55));
+    addRight(colPrecio - 5, y, 7, false, fmtMoney(price));
+    addRight(colTotal - 5, y, 7, false, fmtMoney(subtotal));
+    drawTableRow(rowTop, rowBottom);
     y -= rowHeight;
   });
 
@@ -1627,7 +1640,7 @@ function buildThumbnailBytes() {
     ctx.fillStyle = '#20302B';
     ctx.font = 'bold 15px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('PEDIDO', w / 2, 24);
+    ctx.fillText('NOTA DE PEDIDO', w / 2, 24);
     ctx.strokeStyle = '#999999';
     ctx.lineWidth = 1;
     ctx.beginPath();
