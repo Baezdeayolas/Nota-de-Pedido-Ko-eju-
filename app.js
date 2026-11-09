@@ -14,6 +14,7 @@ let state = {
   ruc: '', // datos de un cliente nuevo que todavía no está en la base de clientes
   direccion: '', // (se guardan solo en este pedido, nunca modifican clientes.js)
   telefono: '',
+  discountPct: 0,
   lines: [], // { code, qty, tier }
   editingId: null, // si no es null, este borrador está sincronizado en vivo con un pedido del archivo
 };
@@ -125,6 +126,7 @@ function syncArchiveFromDraft() {
       ruc: state.ruc,
       direccion: state.direccion,
       telefono: state.telefono,
+      discountPct: normalizedDiscountPct(state.discountPct),
       lines: JSON.parse(JSON.stringify(state.lines)),
       createdAt: idx !== -1 ? archive[idx].createdAt : new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -408,6 +410,14 @@ function updateLineTier(idx, tier) {
 const orderList = document.getElementById('order-list');
 const orderEmpty = document.getElementById('order-empty');
 const tabOrderCount = document.getElementById('tab-order-count');
+const discountInput = document.getElementById('discount-input');
+discountInput.addEventListener('input', () => {
+  const raw = Number(discountInput.value);
+  if (discountInput.value !== '' && raw > 100) discountInput.value = '100';
+  if (discountInput.value !== '' && raw < 0) discountInput.value = '0';
+  state.discountPct = normalizedDiscountPct(discountInput.value);
+  saveState(); syncArchiveFromDraft(); updateFooter();
+});
 
 function lineSubtotal(line) {
   const item = byCode.get(line.code);
@@ -471,8 +481,18 @@ function grandTotal() {
   return state.lines.reduce((sum, l) => sum + lineSubtotal(l), 0);
 }
 
+function normalizedDiscountPct(value) { return Math.min(100, Math.max(0, Number(value) || 0)); }
+function discountValue(subtotal, pct) { return Math.round(subtotal * normalizedDiscountPct(pct) / 100); }
+function orderNetTotal(subtotal, pct) { return Math.max(0, subtotal - discountValue(subtotal, pct)); }
+
 function updateFooter() {
-  totalValueEl.textContent = `Gs. ${fmtMoney(grandTotal())}`;
+  const subtotal = grandTotal();
+  const pct = normalizedDiscountPct(state.discountPct);
+  totalValueEl.textContent = `Gs. ${fmtMoney(orderNetTotal(subtotal, pct))}`;
+  const a = document.getElementById('discount-total');
+  const b = document.getElementById('discount-value');
+  if (a) a.textContent = `Subtotal: Gs. ${fmtMoney(subtotal)}`;
+  if (b) b.textContent = `Descuento: Gs. ${fmtMoney(discountValue(subtotal, pct))}`;
 }
 
 // ---------- Tabs ----------
@@ -628,6 +648,7 @@ document.getElementById('btn-clear').addEventListener('click', () => {
       ruc: state.ruc,
       direccion: state.direccion,
       telefono: state.telefono,
+      discountPct: normalizedDiscountPct(state.discountPct),
       lines: JSON.parse(JSON.stringify(state.lines)),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -643,12 +664,13 @@ document.getElementById('btn-clear').addEventListener('click', () => {
   const keepVendedor = state.vendedor;
   state = {
     tier: 1, vendedor: keepVendedor, cliente: '', clienteCodigo: '', clienteCiudad: '',
-    condicion: '', estado: 'pendiente', ruc: '', direccion: '', telefono: '', lines: [], editingId: null,
+    condicion: '', estado: 'pendiente', ruc: '', direccion: '', telefono: '', discountPct: 0, lines: [], editingId: null,
   };
   saveState();
   vendedorInput.value = state.vendedor || '';
   clienteInput.value = '';
   condicionInput.value = '';
+  discountInput.value = '0';
   rucInput.value = '';
   direccionInput.value = '';
   telefonoInput.value = '';
@@ -682,13 +704,14 @@ const archiveSummaryCount = document.getElementById('archive-summary-count');
 const archiveSummaryValue = document.getElementById('archive-summary-value');
 const tabArchiveCount = document.getElementById('tab-archive-count');
 
-function archiveOrderTotal(entry) {
-  return entry.lines.reduce((sum, line) => {
+function archiveOrderSubtotal(entry) {
+  return (entry.lines || []).reduce((sum, line) => {
     const item = byCode.get(line.code);
     if (!item) return sum;
     return sum + priceOf(item, line.tier) * line.qty;
   }, 0);
 }
+function archiveOrderTotal(entry) { return orderNetTotal(archiveOrderSubtotal(entry), entry.discountPct || 0); }
 
 function fmtDateTime(iso) {
   const d = new Date(iso);
@@ -731,6 +754,9 @@ function renderArchive() {
   }
   archiveList.innerHTML = visibles
     .map((entry) => {
+      const subtotal = archiveOrderSubtotal(entry);
+      const pct = normalizedDiscountPct(entry.discountPct || 0);
+      const descuento = discountValue(subtotal, pct);
       const total = archiveOrderTotal(entry);
       const isEditing = state.editingId === entry.id;
       return `
@@ -742,7 +768,7 @@ function renderArchive() {
             </div>
             <div class="archive-total">Gs. ${fmtMoney(total)}</div>
           </div>
-          <div class="archive-sub">${entry.lines.length} artículo${entry.lines.length === 1 ? '' : 's'}${isEditing ? ' · Editando ahora' : ''}</div>
+          <div class="archive-sub">${entry.lines.length} artículo${entry.lines.length === 1 ? '' : 's'}${pct ? ` · Descuento ${pct}% (Gs. ${fmtMoney(descuento)})` : ''}${isEditing ? ' · Editando ahora' : ''}</div>
           <div class="archive-actions">
             <button class="btn-outline btn-sm" data-edit="${escapeAttr(entry.id)}">Editar</button>
             <button class="btn-outline btn-sm" data-reuse="${escapeAttr(entry.id)}">Reutilizar</button>
@@ -773,6 +799,7 @@ function loadArchivedForEdit(id) {
     ruc: entry.ruc || '',
     direccion: entry.direccion || '',
     telefono: entry.telefono || '',
+    discountPct: normalizedDiscountPct(entry.discountPct || 0),
     lines: JSON.parse(JSON.stringify(entry.lines)),
     editingId: entry.id,
   };
@@ -780,6 +807,7 @@ function loadArchivedForEdit(id) {
   vendedorInput.value = state.vendedor || '';
   clienteInput.value = state.cliente || '';
   condicionInput.value = state.condicion || '';
+  discountInput.value = state.discountPct || 0;
   rucInput.value = state.ruc || '';
   direccionInput.value = state.direccion || '';
   telefonoInput.value = state.telefono || '';
@@ -807,6 +835,7 @@ function reuseArchived(id) {
     ruc: entry.ruc || '',
     direccion: entry.direccion || '',
     telefono: entry.telefono || '',
+    discountPct: 0,
     lines: JSON.parse(JSON.stringify(entry.lines)),
     editingId: null,
   };
@@ -814,6 +843,7 @@ function reuseArchived(id) {
   vendedorInput.value = state.vendedor || '';
   clienteInput.value = state.cliente || '';
   condicionInput.value = state.condicion || '';
+  discountInput.value = state.discountPct || 0;
   rucInput.value = state.ruc || '';
   direccionInput.value = state.direccion || '';
   telefonoInput.value = state.telefono || '';
@@ -924,6 +954,7 @@ function renderHistorico() {
   historicoList.innerHTML = visibles
     .map((entry) => {
       const entryTotal = archiveOrderTotal(entry);
+      const entryDiscount = normalizedDiscountPct(entry.discountPct || 0);
       return `
         <div class="archive-card">
           <div class="archive-top">
@@ -933,7 +964,7 @@ function renderHistorico() {
             </div>
             <div class="archive-total">Gs. ${fmtMoney(entryTotal)}</div>
           </div>
-          <div class="archive-sub">${entry.lines.length} artículo${entry.lines.length === 1 ? '' : 's'}</div>
+          <div class="archive-sub">${entry.lines.length} artículo${entry.lines.length === 1 ? '' : 's'}${entryDiscount ? ` · Descuento ${entryDiscount}%` : ''}</div>
           <div class="archive-actions">
             <button class="btn-outline btn-sm" data-reuse-hist="${escapeAttr(entry.id)}">Reutilizar</button>
             <button class="btn-outline btn-sm danger" data-delete-hist="${escapeAttr(entry.id)}">Eliminar</button>
@@ -1159,6 +1190,7 @@ function buildExportCsv() {
     [
       'Sección', 'Vendedor', 'Cliente', 'CódigoCliente', 'Ciudad', 'Condición', 'Estado',
       'Fecha', 'CódigoArtículo', 'Descripción', 'Cantidad', 'ListaPrecio', 'PrecioUnitario', 'Subtotal',
+      'DescuentoPorcentaje', 'DescuentoGs', 'TotalPedidoConDescuento',
     ]
       .map(csvEscape)
       .join(';')
@@ -1171,11 +1203,16 @@ function buildExportCsv() {
         if (!item) return;
         const price = priceOf(item, line.tier);
         const subtotal = price * line.qty;
+        const pedidoSubtotal = archiveOrderSubtotal(entry);
+        const descuentoPct = normalizedDiscountPct(entry.discountPct || 0);
+        const descuentoGs = discountValue(pedidoSubtotal, descuentoPct);
+        const totalPedido = orderNetTotal(pedidoSubtotal, descuentoPct);
         rows.push(
           [
             seccion, entry.vendedor || '', entry.cliente || '', entry.clienteCodigo || '',
             entry.clienteCiudad || '', entry.condicion || '', entry.estado || '', fecha,
             item.c, item.d, line.qty, 'M' + line.tier, price, subtotal,
+            descuentoPct, descuentoGs, totalPedido,
           ]
             .map(csvEscape)
             .join(';')
@@ -1580,16 +1617,24 @@ function generatePdfBytes(orderState) {
     y = marginTop;
   }
   y -= 12;
-  const boxTop = y + 12;
-  const boxBottom = y - 6;
-  const dividerX = 300;
+  const boxTop = y + 8;
+  const boxBottom = y - 34;
+  const pdfSubtotal = orderState.lines.reduce((sum, line) => sum + (byCode.has(line.code) ? priceOf(byCode.get(line.code), line.tier) * line.qty : 0), 0);
+  const pdfDiscountPct = normalizedDiscountPct(orderState.discountPct || 0);
+  const pdfDiscount = discountValue(pdfSubtotal, pdfDiscountPct);
+  const pdfTotal = orderNetTotal(pdfSubtotal, pdfDiscountPct);
   addRule(marginLeft, boxTop, marginRight);
+  addRule(marginLeft, y - 6, marginRight);
+  addRule(marginLeft, y - 20, marginRight);
   addRule(marginLeft, boxBottom, marginRight);
   addVRule(marginLeft, boxBottom, boxTop);
   addVRule(marginRight, boxBottom, boxTop);
-  addVRule(dividerX, boxBottom, boxTop);
-  addText(marginLeft + 8, y, 9, true, 'Total General');
-  addRight(marginRight - 8, y, 9, true, `Gs. ${fmtMoney(grandTotal())}`);
+  addText(marginLeft + 8, y, 8, false, 'Subtotal');
+  addRight(marginRight - 8, y, 8, false, `Gs. ${fmtMoney(pdfSubtotal)}`);
+  addText(marginLeft + 8, y - 14, 8, false, `Descuento (${pdfDiscountPct}%)`);
+  addRight(marginRight - 8, y - 14, 8, false, `- Gs. ${fmtMoney(pdfDiscount)}`);
+  addText(marginLeft + 8, y - 28, 9, true, 'TOTAL A PAGAR');
+  addRight(marginRight - 8, y - 28, 9, true, `Gs. ${fmtMoney(pdfTotal)}`);
 
   if (orderState.estado === 'confirmado') {
     let yConfirmado = boxBottom - 26;
