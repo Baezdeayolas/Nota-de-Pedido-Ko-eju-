@@ -103,6 +103,14 @@
       <button id="editing-banner-exit" class="btn-outline btn-sm">Salir</button>
     </div>
     <div class="order-list" id="order-list"></div>
+    <div class="order-discount-panel">
+      <label for="discount-input">Descuento del pedido (%)</label>
+      <input id="discount-input" type="number" min="0" max="100" step="0.1" value="0" inputmode="decimal">
+      <div class="discount-summary">
+        <span id="discount-total">Subtotal: Gs. 0</span>
+        <span id="discount-value">Descuento: Gs. 0</span>
+      </div>
+    </div>
     <div class="empty-state" id="order-empty">
       <div class="big">Todavía no agregaste artículos</div>
       <div>Buscá por código o descripción en la pestaña "Buscar".</div>
