@@ -670,6 +670,23 @@ main {
   font-size: 16px;
 }
 
+.order-discount-panel {
+  margin: 12px 14px 18px; padding: 12px; border: 1px solid var(--line);
+  border-radius: 10px; background: var(--paper); display: grid;
+  grid-template-columns: 1fr 110px; align-items: center; gap: 8px 12px;
+}
+.order-discount-panel label { font-size: 14px; font-weight: 700; }
+.order-discount-panel input {
+  width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--line);
+  border-radius: 7px; background: var(--paper-dim); font-family: var(--font-mono);
+  font-size: 16px; text-align: right;
+}
+.discount-summary {
+  grid-column: 1 / -1; display: flex; justify-content: space-between;
+  flex-wrap: wrap; gap: 6px 12px; color: var(--muted);
+  font-family: var(--font-mono); font-size: 12px;
+}
+
 /* ---------- Footer / totals ---------- */
 
 .footer {
