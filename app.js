@@ -1842,6 +1842,7 @@ loadHistorico();
 loadFavItems();
 loadFavClientes();
 loadState();
+discountInput.value = state.discountPct || 0;
 vendedorInput.value = state.vendedor || '';
 clienteInput.value = state.cliente || '';
 condicionInput.value = state.condicion || '';
