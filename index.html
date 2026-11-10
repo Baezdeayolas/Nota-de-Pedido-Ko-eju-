@@ -121,7 +121,7 @@
   <section id="panel-stock" class="panel">
     <div class="stock-import-head">
       <div><h2>Control de stock</h2><p>Existencias importadas desde Lotus</p></div>
-      <button type="button" class="btn-outline btn-sm" id="btn-import-stock">Importar Excel</button>
+      <div class="stock-head-actions"><button type="button" class="btn-outline btn-sm" id="btn-import-stock">Importar Excel</button><button type="button" class="btn-outline btn-sm" id="btn-export-stock">Exportar reposición</button></div>
       <input type="file" id="stock-file-input" accept=".xlsx,.xls" hidden>
     </div>
     <div class="stock-updated" id="stock-updated">Todavía no se importó ningún archivo de Lotus.</div>
@@ -132,6 +132,7 @@
     </div>
     <div class="stock-controls">
       <input id="stock-search" type="search" placeholder="Buscar código o descripción...">
+      <select id="stock-group-filter"><option value="">Todas las agrupaciones</option></select>
       <select id="stock-filter"><option value="all">Todos los productos</option><option value="low">Con stock bajo (&lt;10)</option><option value="zero">Agotados en ambos</option><option value="central">Stock bajo en Central</option><option value="cde">Stock bajo en CDE</option></select>
     </div>
     <div class="stock-result-count" id="stock-result-count"></div>
