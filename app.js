@@ -164,14 +164,20 @@ function parseStockNumber(value) {
 }
 
 function refreshStockGroupOptions() {
-  const select = document.getElementById('stock-group-filter');
-  if (!select) return;
-  const previous = select.value;
-  const groups = [...new Set(stockSnapshot.map(x => String(x.group || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'es'));
-  select.innerHTML = '<option value="">Todas las agrupaciones</option>' + groups.map(g => '<option value="' + escapeAttr(g) + '">' + escapeHtml(g) + '</option>').join('');
-  if (groups.includes(previous)) select.value = previous;
-  select.disabled = groups.length === 0;
-  select.title = groups.length ? 'Filtrar por agrupación' : 'No hay agrupaciones guardadas. Volvé a importar el Excel de Lotus.';
+  [
+    { id: 'stock-group1-filter', key: 'group1', label: 'Agrup. 1' },
+    { id: 'stock-group2-filter', key: 'group2', label: 'Agrup. 2' },
+    { id: 'stock-group3-filter', key: 'group3', label: 'Agrup. 3' },
+  ].forEach(({ id, key, label }) => {
+    const select = document.getElementById(id);
+    if (!select) return;
+    const previous = select.value;
+    const groups = [...new Set(stockSnapshot.map(x => String(x[key] || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'es'));
+    select.innerHTML = '<option value="">Todas (' + label + ')</option>' + groups.map(g => '<option value="' + escapeAttr(g) + '">' + escapeHtml(g) + '</option>').join('');
+    if (groups.includes(previous)) select.value = previous;
+    select.disabled = groups.length === 0;
+    select.title = groups.length ? 'Filtrar por ' + label : 'No hay valores guardados. Volvé a importar el Excel de Lotus.';
+  });
 }
 function loadStockImport() {
   try {
@@ -192,7 +198,7 @@ function renderStockPanel() {
   if (!list) return;
   const q = (document.getElementById('stock-search').value || '').trim().toLowerCase();
   const filter = document.getElementById('stock-filter').value;
-  const group = document.getElementById('stock-group-filter').value;
+  const group1 = document.getElementById('stock-group1-filter').value;\n  const group2 = document.getElementById('stock-group2-filter').value;\n  const group3 = document.getElementById('stock-group3-filter').value;
   const lowCentral = stockSnapshot.filter(x => x.central < STOCK_LOW_LIMIT).length;
   const lowCde = stockSnapshot.filter(x => x.cde < STOCK_LOW_LIMIT).length;
   const zeroBoth = stockSnapshot.filter(x => x.central <= 0 && x.cde <= 0).length;
@@ -207,7 +213,7 @@ function renderStockPanel() {
     document.getElementById('stock-result-count').textContent = '';
     return;
   }
-  let rows = stockSnapshot.filter(x => (!q || x.code.toLowerCase().includes(q) || x.description.toLowerCase().includes(q)) && (!group || x.group === group));
+  let rows = stockSnapshot.filter(x => (!q || x.code.toLowerCase().includes(q) || x.description.toLowerCase().includes(q)) && (!group1 || x.group1 === group1) && (!group2 || x.group2 === group2) && (!group3 || x.group3 === group3));
   if (filter === 'low') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT || x.cde < STOCK_LOW_LIMIT);
   if (filter === 'zero') rows = rows.filter(x => x.central <= 0 && x.cde <= 0);
   if (filter === 'central') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT);
@@ -232,7 +238,7 @@ function exportStockReplenishment() {
   if (filter === 'central') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT);
   if (filter === 'cde') rows = rows.filter(x => x.cde < STOCK_LOW_LIMIT);
   const data = rows.map(x => ({
-    'Agrupación': x.group || 'Sin agrupación',
+    'Agrup. 1': x.group1 || '',\n    'Agrup. 2': x.group2 || '',\n    'Agrup. 3': x.group3 || '',
     'Código': x.code,
     'Descripción': x.description,
     'Stock Central': x.central,
@@ -243,7 +249,7 @@ function exportStockReplenishment() {
     'Observaciones': ''
   }));
   const ws = XLSX.utils.json_to_sheet(data);
-  ws['!cols'] = [{wch:24},{wch:16},{wch:48},{wch:16},{wch:14},{wch:14},{wch:24},{wch:22},{wch:32}];
+  ws['!cols'] = [{wch:16},{wch:16},{wch:16},{wch:16},{wch:48},{wch:16},{wch:14},{wch:14},{wch:24},{wch:22},{wch:32}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Listado de reposición');
   XLSX.writeFile(wb, 'Listado_de_reposicion_' + new Date().toISOString().slice(0,10) + '.xlsx');
@@ -267,7 +273,10 @@ function importLotusStock(file) {
       const descIndex = headers.indexOf('DESCRIPCION');
       const centralIndex = headers.indexOf('CENTRAL');
       const cdeIndex = headers.indexOf('CDE');
-      const groupIndex = headers.findIndex(h => h.includes('AGRUPACION') || h.startsWith('GRUPO') || h === 'AGRUP' || h.startsWith('FAMILIA'));
+      const group1Index = headers.findIndex(h => h === 'AGRUP1' || h === 'AGRUPACION1' || h === 'GRUPO1');
+      const group2Index = headers.findIndex(h => h === 'AGRUP2' || h === 'AGRUPACION2' || h === 'GRUPO2');
+      const group3Index = headers.findIndex(h => h === 'AGRUP3' || h === 'AGRUPACION3' || h === 'GRUPO3');
+      const legacyGroupIndex = headers.findIndex(h => (h.includes('AGRUPACION') || h.startsWith('GRUPO') || h === 'AGRUP' || h.startsWith('FAMILIA')) && !/^AGRUP[123]$/.test(h) && !/^GRUPO[123]$/.test(h));
       const imported = [];
       const seen = new Set();
       for (const row of matrix.slice(headerIndex + 1)) {
@@ -277,7 +286,7 @@ function importLotusStock(file) {
         imported.push({
           code,
           description: String(row[descIndex] || byCode.get(code)?.d || '').trim(),
-          group: groupIndex >= 0 ? String(row[groupIndex] || 'Sin agrupación').trim() : 'Sin agrupación',
+          group1: group1Index >= 0 ? String(row[group1Index] || '').trim() : '',\n          group2: group2Index >= 0 ? String(row[group2Index] || '').trim() : '',\n          group3: group3Index >= 0 ? String(row[group3Index] || '').trim() : '',\n          group: legacyGroupIndex >= 0 ? String(row[legacyGroupIndex] || '').trim() : '',
           central: parseStockNumber(row[centralIndex]),
           cde: parseStockNumber(row[cdeIndex]),
         });
@@ -294,7 +303,7 @@ function importLotusStock(file) {
       localStorage.setItem(STOCK_IMPORT_KEY, JSON.stringify({ importedAt: stockImportedAt, items: stockSnapshot }));
       renderStockPanel();
       renderResults();
-      alert('Importación completada: ' + imported.length.toLocaleString('es-PY') + ' productos. Coincidencias con el catálogo: ' + matched.toLocaleString('es-PY') + (groupIndex >= 0 ? '. Agrupaciones detectadas: ' + new Set(imported.map(x => x.group)).size + '.' : '. ATENCIÓN: no se encontró una columna de agrupación en este Excel.'));
+      alert('Importación completada: ' + imported.length.toLocaleString('es-PY') + ' productos. Coincidencias con el catálogo: ' + matched.toLocaleString('es-PY') + ((group1Index >= 0 || group2Index >= 0 || group3Index >= 0) ? '. Columnas detectadas: ' + [group1Index >= 0 ? 'Agrup. 1' : '', group2Index >= 0 ? 'Agrup. 2' : '', group3Index >= 0 ? 'Agrup. 3' : ''].filter(Boolean).join(', ') + '.' : '. ATENCIÓN: no se encontraron columnas Agrup. 1, Agrup. 2 ni Agrup. 3 en este Excel.'));
     } catch (error) {
       alert('No se pudo importar el archivo: ' + error.message);
     }
@@ -679,7 +688,7 @@ stockFileInput.addEventListener('change', () => {
 });
 document.getElementById('stock-search').addEventListener('input', renderStockPanel);
 document.getElementById('stock-filter').addEventListener('change', renderStockPanel);
-document.getElementById('stock-group-filter').addEventListener('change', renderStockPanel);
+['stock-group1-filter', 'stock-group2-filter', 'stock-group3-filter'].forEach(id => document.getElementById(id).addEventListener('change', renderStockPanel));
 document.getElementById('btn-export-stock').addEventListener('click', exportStockReplenishment);
 
 
