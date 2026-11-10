@@ -83,6 +83,7 @@
   <button class="tab-btn active" data-panel="panel-search">Buscar</button>
   <button class="tab-btn" data-panel="panel-order">Pedido <span class="count" id="tab-order-count">0</span></button>
   <button class="tab-btn" data-panel="panel-archive">Archivo <span class="count" id="tab-archive-count">0</span></button>
+  <button class="tab-btn" data-panel="panel-stock">Stock</button>
 </nav>
 
 <main>
@@ -115,6 +116,26 @@
       <div class="big">Todavía no agregaste artículos</div>
       <div>Buscá por código o descripción en la pestaña "Buscar".</div>
     </div>
+  </section>
+
+  <section id="panel-stock" class="panel">
+    <div class="stock-import-head">
+      <div><h2>Control de stock</h2><p>Existencias importadas desde Lotus</p></div>
+      <button type="button" class="btn-outline btn-sm" id="btn-import-stock">Importar Excel</button>
+      <input type="file" id="stock-file-input" accept=".xlsx,.xls" hidden>
+    </div>
+    <div class="stock-updated" id="stock-updated">Todavía no se importó ningún archivo de Lotus.</div>
+    <div class="stock-summary-grid">
+      <div class="stock-summary-card"><span>Central con menos de 10</span><strong id="stock-low-central">—</strong></div>
+      <div class="stock-summary-card"><span>CDE con menos de 10</span><strong id="stock-low-cde">—</strong></div>
+      <div class="stock-summary-card"><span>Agotados en ambos</span><strong id="stock-zero-both">—</strong></div>
+    </div>
+    <div class="stock-controls">
+      <input id="stock-search" type="search" placeholder="Buscar código o descripción...">
+      <select id="stock-filter"><option value="all">Todos los productos</option><option value="low">Con stock bajo (&lt;10)</option><option value="zero">Agotados en ambos</option><option value="central">Stock bajo en Central</option><option value="cde">Stock bajo en CDE</option></select>
+    </div>
+    <div class="stock-result-count" id="stock-result-count"></div>
+    <div class="stock-list" id="stock-list"><div class="empty-state"><div class="big">Importá el Excel de Lotus</div><div>Acá aparecerán las existencias de Central y CDE.</div></div></div>
   </section>
 
   <section id="panel-archive" class="panel">
@@ -206,6 +227,7 @@
 </div>
 
 <script src="data.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="clientes.js"></script>
 <script src="app.js"></script>
 </body>
