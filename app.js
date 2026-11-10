@@ -152,6 +152,10 @@ function normalizeStockCode(value) {
   return String(value == null ? '' : value).trim().replace(/\\.0$/, '');
 }
 
+function normalizeStockHeader(value) {
+  return String(value == null ? '' : value).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
 function parseStockNumber(value) {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
   const cleaned = String(value == null ? '' : value).trim().replace(/\\./g, '').replace(',', '.');
@@ -177,6 +181,7 @@ function renderStockPanel() {
   if (!list) return;
   const q = (document.getElementById('stock-search').value || '').trim().toLowerCase();
   const filter = document.getElementById('stock-filter').value;
+  const group = document.getElementById('stock-group-filter').value;
   const lowCentral = stockSnapshot.filter(x => x.central < STOCK_LOW_LIMIT).length;
   const lowCde = stockSnapshot.filter(x => x.cde < STOCK_LOW_LIMIT).length;
   const zeroBoth = stockSnapshot.filter(x => x.central <= 0 && x.cde <= 0).length;
@@ -191,7 +196,7 @@ function renderStockPanel() {
     document.getElementById('stock-result-count').textContent = '';
     return;
   }
-  let rows = stockSnapshot.filter(x => !q || x.code.toLowerCase().includes(q) || x.description.toLowerCase().includes(q));
+  let rows = stockSnapshot.filter(x => (!q || x.code.toLowerCase().includes(q) || x.description.toLowerCase().includes(q)) && (!group || x.group === group));
   if (filter === 'low') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT || x.cde < STOCK_LOW_LIMIT);
   if (filter === 'zero') rows = rows.filter(x => x.central <= 0 && x.cde <= 0);
   if (filter === 'central') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT);
@@ -204,6 +209,35 @@ function renderStockPanel() {
   }).join('') + (rows.length > 300 ? '<div class="stock-more">Mostrando los primeros 300 resultados. Usá el buscador para acotar.</div>' : '');
 }
 
+function exportStockReplenishment() {
+  if (!window.XLSX) { alert('No se pudo cargar el generador de Excel. Revisá tu conexión a internet.'); return; }
+  if (!stockSnapshot.length) { alert('Primero importá el Excel de Lotus.'); return; }
+  const q = (document.getElementById('stock-search').value || '').trim().toLowerCase();
+  const filter = document.getElementById('stock-filter').value;
+  const group = document.getElementById('stock-group-filter').value;
+  let rows = stockSnapshot.filter(x => (!q || x.code.toLowerCase().includes(q) || x.description.toLowerCase().includes(q)) && (!group || x.group === group));
+  if (filter === 'low') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT || x.cde < STOCK_LOW_LIMIT);
+  if (filter === 'zero') rows = rows.filter(x => x.central <= 0 && x.cde <= 0);
+  if (filter === 'central') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT);
+  if (filter === 'cde') rows = rows.filter(x => x.cde < STOCK_LOW_LIMIT);
+  const data = rows.map(x => ({
+    'Agrupación': x.group || 'Sin agrupación',
+    'Código': x.code,
+    'Descripción': x.description,
+    'Stock Central': x.central,
+    'Stock CDE': x.cde,
+    'Stock total': x.central + x.cde,
+    'Cantidad a reponer Central': '',
+    'Cantidad a reponer CDE': '',
+    'Observaciones': ''
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  ws['!cols'] = [{wch:24},{wch:16},{wch:48},{wch:16},{wch:14},{wch:14},{wch:24},{wch:22},{wch:32}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Listado de reposición');
+  XLSX.writeFile(wb, 'Listado_de_reposicion_' + new Date().toISOString().slice(0,10) + '.xlsx');
+}
+
 function importLotusStock(file) {
   if (!window.XLSX) { alert('No se pudo cargar el lector de Excel. Revisá tu conexión a internet e intentá nuevamente.'); return; }
   const reader = new FileReader();
@@ -213,15 +247,16 @@ function importLotusStock(file) {
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: '' });
       const headerIndex = matrix.findIndex(row => {
-        const cells = row.map(v => String(v).trim().toUpperCase());
-        return cells.includes('CÓD.ARTÍCULO') && cells.includes('CENTRAL') && cells.includes('CDE');
+        const cells = row.map(normalizeStockHeader);
+        return cells.includes('CODARTICULO') && cells.includes('CENTRAL') && cells.includes('CDE');
       });
       if (headerIndex < 0) throw new Error('No se encontraron las columnas Cód.Artículo, CENTRAL y CDE.');
-      const headers = matrix[headerIndex].map(v => String(v).trim().toUpperCase());
-      const codeIndex = headers.indexOf('CÓD.ARTÍCULO');
-      const descIndex = headers.indexOf('DESCRIPCIÓN');
+      const headers = matrix[headerIndex].map(normalizeStockHeader);
+      const codeIndex = headers.indexOf('CODARTICULO');
+      const descIndex = headers.indexOf('DESCRIPCION');
       const centralIndex = headers.indexOf('CENTRAL');
       const cdeIndex = headers.indexOf('CDE');
+      const groupIndex = headers.findIndex(h => h.includes('AGRUPACION') || h === 'GRUPO' || h === 'AGRUP');
       const imported = [];
       const seen = new Set();
       for (const row of matrix.slice(headerIndex + 1)) {
@@ -231,6 +266,7 @@ function importLotusStock(file) {
         imported.push({
           code,
           description: String(row[descIndex] || byCode.get(code)?.d || '').trim(),
+          group: groupIndex >= 0 ? String(row[groupIndex] || 'Sin agrupación').trim() : 'Sin agrupación',
           central: parseStockNumber(row[centralIndex]),
           cde: parseStockNumber(row[cdeIndex]),
         });
@@ -238,6 +274,11 @@ function importLotusStock(file) {
       if (!imported.length) throw new Error('El archivo no contiene productos con código.');
       const matched = imported.filter(x => byCode.has(x.code)).length;
       stockSnapshot = imported;
+      const groupSelect = document.getElementById('stock-group-filter');
+      const previousGroup = groupSelect.value;
+      const groups = [...new Set(imported.map(x => x.group).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'es'));
+      groupSelect.innerHTML = '<option value="">Todas las agrupaciones</option>' + groups.map(g => '<option value="' + escapeAttr(g) + '">' + escapeHtml(g) + '</option>').join('');
+      if (groups.includes(previousGroup)) groupSelect.value = previousGroup;
       stockImportedAt = new Date().toISOString();
       imported.forEach(row => {
         const item = byCode.get(row.code);
@@ -631,6 +672,8 @@ stockFileInput.addEventListener('change', () => {
 });
 document.getElementById('stock-search').addEventListener('input', renderStockPanel);
 document.getElementById('stock-filter').addEventListener('change', renderStockPanel);
+document.getElementById('stock-group-filter').addEventListener('change', renderStockPanel);
+document.getElementById('btn-export-stock').addEventListener('click', exportStockReplenishment);
 
 
 // ---------- Selector de precio (global) ----------
