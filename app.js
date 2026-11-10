@@ -321,8 +321,8 @@ function renderResults() {
 
 function itemCardHtml(it) {
   const price = priceOf(it, state.tier);
-  const lowCentral = it.sc <= 0;
-  const lowCde = it.sd <= 0;
+  const lowCentral = Number(it.sc) < STOCK_LOW_LIMIT;
+  const lowCde = Number(it.sd) < STOCK_LOW_LIMIT;
   const isFav = favItems.has(it.c);
   return `
     <div class="item-card" data-code="${escapeAttr(it.c)}">
