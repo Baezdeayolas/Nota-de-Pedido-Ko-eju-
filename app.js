@@ -198,7 +198,9 @@ function renderStockPanel() {
   if (!list) return;
   const q = (document.getElementById('stock-search').value || '').trim().toLowerCase();
   const filter = document.getElementById('stock-filter').value;
-  const group1 = document.getElementById('stock-group1-filter').value;\n  const group2 = document.getElementById('stock-group2-filter').value;\n  const group3 = document.getElementById('stock-group3-filter').value;
+  const group1 = document.getElementById('stock-group1-filter').value;
+  const group2 = document.getElementById('stock-group2-filter').value;
+  const group3 = document.getElementById('stock-group3-filter').value;
   const lowCentral = stockSnapshot.filter(x => x.central < STOCK_LOW_LIMIT).length;
   const lowCde = stockSnapshot.filter(x => x.cde < STOCK_LOW_LIMIT).length;
   const zeroBoth = stockSnapshot.filter(x => x.central <= 0 && x.cde <= 0).length;
@@ -238,7 +240,9 @@ function exportStockReplenishment() {
   if (filter === 'central') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT);
   if (filter === 'cde') rows = rows.filter(x => x.cde < STOCK_LOW_LIMIT);
   const data = rows.map(x => ({
-    'Agrup. 1': x.group1 || '',\n    'Agrup. 2': x.group2 || '',\n    'Agrup. 3': x.group3 || '',
+    'Agrup. 1': x.group1 || '',
+    'Agrup. 2': x.group2 || '',
+    'Agrup. 3': x.group3 || '',
     'Código': x.code,
     'Descripción': x.description,
     'Stock Central': x.central,
@@ -286,7 +290,10 @@ function importLotusStock(file) {
         imported.push({
           code,
           description: String(row[descIndex] || byCode.get(code)?.d || '').trim(),
-          group1: group1Index >= 0 ? String(row[group1Index] || '').trim() : '',\n          group2: group2Index >= 0 ? String(row[group2Index] || '').trim() : '',\n          group3: group3Index >= 0 ? String(row[group3Index] || '').trim() : '',\n          group: legacyGroupIndex >= 0 ? String(row[legacyGroupIndex] || '').trim() : '',
+          group1: group1Index >= 0 ? String(row[group1Index] || '').trim() : '',
+          group2: group2Index >= 0 ? String(row[group2Index] || '').trim() : '',
+          group3: group3Index >= 0 ? String(row[group3Index] || '').trim() : '',
+          group: legacyGroupIndex >= 0 ? String(row[legacyGroupIndex] || '').trim() : '',
           central: parseStockNumber(row[centralIndex]),
           cde: parseStockNumber(row[cdeIndex]),
         });
