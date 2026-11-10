@@ -153,12 +153,12 @@ function normalizeStockCode(value) {
 }
 
 function normalizeStockHeader(value) {
-  return String(value == null ? '' : value).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return String(value == null ? '' : value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
 function parseStockNumber(value) {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
-  const cleaned = String(value == null ? '' : value).trim().replace(/\\./g, '').replace(',', '.');
+  const cleaned = String(value == null ? '' : value).trim().replace(/\./g, '').replace(',', '.');
   const n = Number(cleaned);
   return Number.isFinite(n) ? n : 0;
 }
