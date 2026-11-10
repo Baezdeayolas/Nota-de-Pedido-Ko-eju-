@@ -163,17 +163,28 @@ function parseStockNumber(value) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function refreshStockGroupOptions() {
+  const select = document.getElementById('stock-group-filter');
+  if (!select) return;
+  const previous = select.value;
+  const groups = [...new Set(stockSnapshot.map(x => String(x.group || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'es'));
+  select.innerHTML = '<option value="">Todas las agrupaciones</option>' + groups.map(g => '<option value="' + escapeAttr(g) + '">' + escapeHtml(g) + '</option>').join('');
+  if (groups.includes(previous)) select.value = previous;
+  select.disabled = groups.length === 0;
+  select.title = groups.length ? 'Filtrar por agrupación' : 'No hay agrupaciones guardadas. Volvé a importar el Excel de Lotus.';
+}
 function loadStockImport() {
   try {
     const saved = JSON.parse(localStorage.getItem(STOCK_IMPORT_KEY) || 'null');
-    if (!saved || !Array.isArray(saved.items)) return;
+    if (!saved || !Array.isArray(saved.items)) { refreshStockGroupOptions(); return; }
     stockSnapshot = saved.items;
     stockImportedAt = saved.importedAt || null;
     stockSnapshot.forEach((row) => {
       const item = byCode.get(row.code);
       if (item) { item.sc = row.central; item.sd = row.cde; }
     });
-  } catch (e) { stockSnapshot = []; stockImportedAt = null; }
+    refreshStockGroupOptions();
+  } catch (e) { stockSnapshot = []; stockImportedAt = null; refreshStockGroupOptions(); }
 }
 
 function renderStockPanel() {
@@ -256,7 +267,7 @@ function importLotusStock(file) {
       const descIndex = headers.indexOf('DESCRIPCION');
       const centralIndex = headers.indexOf('CENTRAL');
       const cdeIndex = headers.indexOf('CDE');
-      const groupIndex = headers.findIndex(h => h.includes('AGRUPACION') || h === 'GRUPO' || h === 'AGRUP');
+      const groupIndex = headers.findIndex(h => h.includes('AGRUPACION') || h.startsWith('GRUPO') || h === 'AGRUP' || h.startsWith('FAMILIA'));
       const imported = [];
       const seen = new Set();
       for (const row of matrix.slice(headerIndex + 1)) {
@@ -274,11 +285,7 @@ function importLotusStock(file) {
       if (!imported.length) throw new Error('El archivo no contiene productos con código.');
       const matched = imported.filter(x => byCode.has(x.code)).length;
       stockSnapshot = imported;
-      const groupSelect = document.getElementById('stock-group-filter');
-      const previousGroup = groupSelect.value;
-      const groups = [...new Set(imported.map(x => x.group).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'es'));
-      groupSelect.innerHTML = '<option value="">Todas las agrupaciones</option>' + groups.map(g => '<option value="' + escapeAttr(g) + '">' + escapeHtml(g) + '</option>').join('');
-      if (groups.includes(previousGroup)) groupSelect.value = previousGroup;
+      refreshStockGroupOptions();
       stockImportedAt = new Date().toISOString();
       imported.forEach(row => {
         const item = byCode.get(row.code);
@@ -287,7 +294,7 @@ function importLotusStock(file) {
       localStorage.setItem(STOCK_IMPORT_KEY, JSON.stringify({ importedAt: stockImportedAt, items: stockSnapshot }));
       renderStockPanel();
       renderResults();
-      alert('Importación completada: ' + imported.length.toLocaleString('es-PY') + ' productos. Coincidencias con el catálogo: ' + matched.toLocaleString('es-PY') + '.');
+      alert('Importación completada: ' + imported.length.toLocaleString('es-PY') + ' productos. Coincidencias con el catálogo: ' + matched.toLocaleString('es-PY') + (groupIndex >= 0 ? '. Agrupaciones detectadas: ' + new Set(imported.map(x => x.group)).size + '.' : '. ATENCIÓN: no se encontró una columna de agrupación en este Excel.'));
     } catch (error) {
       alert('No se pudo importar el archivo: ' + error.message);
     }
