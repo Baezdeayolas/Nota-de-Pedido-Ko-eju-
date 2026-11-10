@@ -233,12 +233,20 @@ function exportStockReplenishment() {
   if (!stockSnapshot.length) { alert('Primero importá el Excel de Lotus.'); return; }
   const q = (document.getElementById('stock-search').value || '').trim().toLowerCase();
   const filter = document.getElementById('stock-filter').value;
-  const group = document.getElementById('stock-group-filter').value;
-  let rows = stockSnapshot.filter(x => (!q || x.code.toLowerCase().includes(q) || x.description.toLowerCase().includes(q)) && (!group || x.group === group));
+  const group1 = document.getElementById('stock-group1-filter').value;
+  const group2 = document.getElementById('stock-group2-filter').value;
+  const group3 = document.getElementById('stock-group3-filter').value;
+  let rows = stockSnapshot.filter(x =>
+    (!q || String(x.code || '').toLowerCase().includes(q) || String(x.description || '').toLowerCase().includes(q)) &&
+    (!group1 || x.group1 === group1) &&
+    (!group2 || x.group2 === group2) &&
+    (!group3 || x.group3 === group3)
+  );
   if (filter === 'low') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT || x.cde < STOCK_LOW_LIMIT);
   if (filter === 'zero') rows = rows.filter(x => x.central <= 0 && x.cde <= 0);
   if (filter === 'central') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT);
   if (filter === 'cde') rows = rows.filter(x => x.cde < STOCK_LOW_LIMIT);
+  if (!rows.length) { alert('No hay productos para exportar con los filtros seleccionados.'); return; }
   const data = rows.map(x => ({
     'Agrup. 1': x.group1 || '',
     'Agrup. 2': x.group2 || '',
