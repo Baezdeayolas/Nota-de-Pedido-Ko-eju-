@@ -1421,6 +1421,13 @@ function generatePdfBytes(orderState) {
   function addCenter(centerX, yy, size, bold, text) {
     texts.push({ x: centerX - textWidth(text, size) / 2, y: yy, size, bold, font: 'sans', text });
   }
+
+  function drawMiniHeader() {
+    const emitter = String(window.KOEJU_EMITTER_EMAIL || '').trim().toUpperCase();
+    addText(marginLeft, 824, 6.5, false, 'AB SYSTEM');
+    addText(marginLeft, 814, 6.5, false, 'Emitido por ' + (emitter || ''));
+    addRight(marginRight, 824, 6.5, false, "Pedido Ko'eju Rory S. A");
+  }
   function addRule(x1, yy, x2) {
     graphics.push({ x1, y1: yy, x2, y2: yy });
   }
@@ -1458,9 +1465,13 @@ function generatePdfBytes(orderState) {
     if (y - rowHeight < marginBottom) {
       pushPage();
       y = marginTop;
+      drawMiniHeader();
       drawTableHeader();
     }
   }
+
+  // ---- Mini encabezado ----
+  drawMiniHeader();
 
   // ---- Título ----
   const ahora = new Date();
