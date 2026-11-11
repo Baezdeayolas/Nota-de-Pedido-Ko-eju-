@@ -1005,3 +1005,9 @@ main {
 .admin-tools h2 { margin: 0 0 4px; font-size: 16px; }
 .admin-tools p { margin: 0 0 10px; color: var(--ink-soft); font-size: 12px; }
 .admin-tools button { padding: 9px 12px; border-radius: 8px; font: 600 13px var(--font-body); }
+
+
+/* Cerrar sesión debajo de AB SYSTEM, alineado a la derecha */
+.topbar-title { align-items: flex-start; }
+.topbar-brand { display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
+.cloud-logout { padding:3px 7px; border:1px solid rgba(234,227,211,.35); border-radius:6px; background:transparent; color:var(--paper); font:600 10px var(--font-body); line-height:1.2; }
