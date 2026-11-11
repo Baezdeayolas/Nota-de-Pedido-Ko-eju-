@@ -14,6 +14,13 @@
     .cloud-bar input{min-width:0;flex:1;padding:8px;border-radius:6px;border:1px solid #aaa}
     .cloud-bar button{padding:8px 10px;border-radius:6px;background:#C99A3C;color:#20302B;font-weight:700}
     .cloud-status{font-size:12px;opacity:.9;flex-basis:100%}
+    .admin-panel-content{padding:14px 12px 100px}.admin-heading{margin:2px 2px 12px}.admin-heading h2{margin:0;font-size:21px}.admin-heading p,.admin-note{color:#65716a;font-size:12px;line-height:1.5}
+    .admin-section{background:#fff;border:1px solid #d8ddd7;border-radius:12px;padding:13px;margin:10px 0}.admin-section h3{margin:0 0 10px;font-size:16px}
+    .admin-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}.admin-filters label,.admin-user-form label{display:block;font-size:12px;color:#526057}
+    .admin-filters input,.admin-filters select,.admin-user-form input{width:100%;min-width:0;padding:9px;border:1px solid #cbd2ca;border-radius:7px;background:#fff;margin-top:4px}.admin-filters .wide{grid-column:1/-1}
+    .admin-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}.admin-metric{background:#20302B;color:#fff;border-radius:9px;padding:11px}.admin-metric span{display:block;color:#e2c47e;font-size:11px}.admin-metric strong{display:block;font-size:19px;margin-top:4px}
+    .admin-report-row{display:flex;justify-content:space-between;gap:8px;padding:9px 2px;border-bottom:1px solid #e5e8e3;font-size:13px}.admin-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.admin-actions button{padding:9px 12px;border-radius:7px;background:#20302B;color:#fff;font-weight:600}.admin-actions button.secondary{background:#fff;color:#20302B;border:1px solid #cbd2ca}
+    .admin-user-form{display:grid;gap:8px}
   `;
   document.head.appendChild(css);
   const bar = document.createElement('section');
@@ -168,6 +175,8 @@
     $('cloud-email').style.display='none'; $('cloud-password').style.display='none';
     $('cloud-login').style.display='none'; $('cloud-logout').style.display='';
     $('cloud-migrate').style.display=profile.role==='admin'?'':'none';
+    adminTab.style.display=profile.role==='admin'?'':'none';
+    if(profile.role==='admin') renderAdminPanel();
     status('Conectado: '+(profile.role==='admin'?'Administrador':assignments.join(', '))+' · sincronización activa');
     $('cloud-password').value='';
   }
@@ -193,11 +202,57 @@
     select.innerHTML='<option value="">Vendedor</option>'+labelOptions.map(v=>'<option value="'+String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+v+'</option>').join('');
     $('cloud-email').style.display='';$('cloud-password').style.display='';
     $('cloud-login').style.display='';$('cloud-logout').style.display='none';$('cloud-migrate').style.display='none';
+    adminTab.style.display='none';$('panel-admin').classList.remove('active');
     status('Sesión cerrada. Los datos guardados en este dispositivo permanecen.');
   }
   $('cloud-login').addEventListener('click',login);
   $('cloud-logout').addEventListener('click',logout);
   $('cloud-migrate').addEventListener('click',migrateLocal);
+
+  const adminTab=$('admin-menu-tab'), adminContent=$('admin-panel-content');
+  function adminDate(e){return new Date(e.updatedAt||e.createdAt||0);}
+  function adminFiltered(){const from=$('admin-date-from').value,to=$('admin-date-to').value,seller=$('admin-seller-filter').value;return archive.concat(historico).filter(e=>{const d=adminDate(e);return (!from||d>=new Date(from+'T00:00:00'))&&(!to||d<=new Date(to+'T23:59:59.999'))&&(!seller||e.vendedor===seller);});}
+  function renderAdminReport(){
+    if(!user||!profile||profile.role!=='admin')return;
+    const orders=adminFiltered(), total=orders.reduce((n,e)=>n+archiveOrderTotal(e),0), groups=new Map();
+    orders.forEach(e=>{const k=e.vendedor||'Sin vendedor',v=groups.get(k)||{count:0,total:0};v.count++;v.total+=archiveOrderTotal(e);groups.set(k,v);});
+    $('admin-total-orders').textContent=orders.length;$('admin-total-sales').textContent='Gs. '+fmtMoney(total);$('admin-seller-count').textContent=groups.size;
+    $('admin-report-list').innerHTML=[...groups.entries()].sort((a,b)=>b[1].total-a[1].total).map(([name,v])=>'<div class="admin-report-row"><span>'+escapeHtml(name)+'<br><small>'+v.count+' pedido(s)</small></span><strong>Gs. '+fmtMoney(v.total)+'</strong></div>').join('')||'<p class="admin-note">No hay pedidos para el período seleccionado.</p>';
+  }
+  function exportAdminReport(){
+    const orders=adminFiltered();if(!orders.length){toastSafe('No hay ventas para exportar con esos filtros.');return;}
+    const rows=[['Vendedor','Cliente','Código cliente','Fecha','Estado','Cantidad de artículos','Total Gs.']];
+    orders.forEach(e=>rows.push([e.vendedor||'',e.cliente||'',e.clienteCodigo||'',adminDate(e).toLocaleString('es-PY'),e.estado||'',(e.lines||[]).reduce((n,l)=>n+(Number(l.qty)||0),0),archiveOrderTotal(e)]));
+    const csv='\uFEFF'+rows.map(row=>row.map(v=>{const s=String(v==null?'':v);return /[;"\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}).join(';')).join('\r\n');
+    const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='resumen_ventas_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);
+  }
+  async function sendSellerRecovery(){
+    const email=$('admin-recovery-email').value.trim();if(!email){toastSafe('Ingresá el correo del vendedor.');return;}
+    $('admin-recovery-btn').disabled=true;
+    try{const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(error)throw error;toastSafe('Si el correo está registrado, recibirá un enlace de recuperación.');$('admin-recovery-email').value='';}
+    catch(e){toastSafe('No se pudo solicitar el cambio: '+(e.message||e));}finally{$('admin-recovery-btn').disabled=false;}
+  }
+  function renderAdminPanel(){
+    if(!adminContent||!profile||profile.role!=='admin')return;
+    adminContent.innerHTML=`
+      <div class="admin-heading"><h2>Administración</h2><p>Panel exclusivo de la cuenta administradora</p></div>
+      <section class="admin-section"><h3>Resumen de ventas por vendedor</h3>
+        <div class="admin-filters"><label>Desde<input type="date" id="admin-date-from"></label><label>Hasta<input type="date" id="admin-date-to"></label>
+        <label class="wide">Vendedor<select id="admin-seller-filter"><option value="">Todos los vendedores</option>${labelOptions.map(v=>'<option value="'+escapeAttr(v)+'">'+escapeHtml(v)+'</option>').join('')}</select></label></div>
+        <div class="admin-metrics"><div class="admin-metric"><span>Pedidos</span><strong id="admin-total-orders">0</strong></div><div class="admin-metric"><span>Total vendido</span><strong id="admin-total-sales">Gs. 0</strong></div></div>
+        <div class="admin-report-row"><span>Vendedores con ventas</span><strong id="admin-seller-count">0</strong></div><div id="admin-report-list"></div>
+        <div class="admin-actions"><button id="admin-export-report">Exportar resumen CSV</button><button class="secondary" id="admin-reset-filters">Limpiar filtros</button></div>
+        <p class="admin-note">Incluye pedidos del Archivo y del Histórico disponibles en la cuenta administradora.</p>
+      </section>
+      <section class="admin-section"><h3>Cambios de contraseña</h3><p class="admin-note">Enviá un enlace seguro de recuperación al correo registrado del vendedor. El cambio se completa desde ese enlace.</p>
+        <div class="admin-user-form"><label>Correo del vendedor<input id="admin-recovery-email" type="email" placeholder="vendedor@correo.com"></label></div><div class="admin-actions"><button id="admin-recovery-btn">Enviar enlace de recuperación</button></div>
+      </section>
+      <section class="admin-section"><h3>Agregar usuarios vendedores</h3><p class="admin-note">Esta opción requiere configurar una función segura en Supabase. No es seguro incluir la clave de administración en la aplicación pública.</p><p class="admin-note"><strong>Pendiente:</strong> alta de nuevas cuentas y asignación inicial desde este menú. Las cuentas existentes siguen funcionando sin cambios.</p></section>`;
+    ['admin-date-from','admin-date-to','admin-seller-filter'].forEach(id=>$(id).addEventListener('change',renderAdminReport));
+    $('admin-export-report').addEventListener('click',exportAdminReport);
+    $('admin-reset-filters').addEventListener('click',()=>{$('admin-date-from').value='';$('admin-date-to').value='';$('admin-seller-filter').value='';renderAdminReport();});
+    $('admin-recovery-btn').addEventListener('click',sendSellerRecovery);renderAdminReport();
+  }
   installSaveHooks();
   function clearUnauthenticatedView() {
     archive=[]; historico=[];
