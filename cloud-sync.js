@@ -190,7 +190,7 @@
     adminTab.style.display=profile.role==='admin'?'':'none';
     if(profile.role==='admin') renderAdminPanel();
     status('Conectado: '+(profile.role==='admin'?'Administrador':assignments.join(', '))+' · sincronización activa');
-    $('cloud-password').value='';
+    // El formulario superior anterior ya no existe; el campo se limpia en login().
   }
   async function login(event) {
     if(event) event.preventDefault();
