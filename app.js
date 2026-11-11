@@ -143,22 +143,20 @@ const byCode = new Map();
 ITEMS.forEach((it) => byCode.set(it.c, it));
 
 // ---------- Inventario importado desde Lotus ----------
-const STOCK_IMPORT_KEY = 'koeju_stock_lotus_v1';
 const STOCK_LOW_LIMIT = 10;
 let stockSnapshot = [];
-let stockImportedAt = null;
 
 function normalizeStockCode(value) {
   return String(value == null ? '' : value).trim().replace(/\\.0$/, '');
 }
 
 function normalizeStockHeader(value) {
-  return String(value == null ? '' : value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return String(value == null ? '' : value).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
 function parseStockNumber(value) {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
-  const cleaned = String(value == null ? '' : value).trim().replace(/\./g, '').replace(',', '.');
+  const cleaned = String(value == null ? '' : value).trim().replace(/\\./g, '').replace(',', '.');
   const n = Number(cleaned);
   return Number.isFinite(n) ? n : 0;
 }
@@ -176,24 +174,25 @@ function refreshStockGroupOptions() {
     select.innerHTML = '<option value="">Todas (' + label + ')</option>' + groups.map(g => '<option value="' + escapeAttr(g) + '">' + escapeHtml(g) + '</option>').join('');
     if (groups.includes(previous)) select.value = previous;
     select.disabled = groups.length === 0;
-    select.title = groups.length ? 'Filtrar por ' + label : 'No hay valores guardados. Volvé a importar el Excel de Lotus.';
+    select.title = groups.length ? 'Filtrar por ' + label : 'No hay agrupaciones disponibles en la base de datos.';
   });
 }
-function loadStockImport() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STOCK_IMPORT_KEY) || 'null');
-    if (!saved || !Array.isArray(saved.items)) { refreshStockGroupOptions(); return; }
-    stockSnapshot = saved.items;
-    stockImportedAt = saved.importedAt || null;
-    stockSnapshot.forEach((row) => {
-      const item = byCode.get(row.code);
-      if (item) { item.sc = row.central; item.sd = row.cde; }
-    });
-    refreshStockGroupOptions();
-  } catch (e) { stockSnapshot = []; stockImportedAt = null; refreshStockGroupOptions(); }
+
+function refreshStockSnapshotFromCatalog() {
+  stockSnapshot = ITEMS.map(item => ({
+    code: String(item.c || ''),
+    description: String(item.d || ''),
+    group1: String(item.g1 || ''),
+    group2: String(item.g2 || ''),
+    group3: String(item.g3 || ''),
+    central: parseStockNumber(item.sc),
+    cde: parseStockNumber(item.sd),
+  })).filter(row => row.code);
+  refreshStockGroupOptions();
 }
 
 function renderStockPanel() {
+  refreshStockSnapshotFromCatalog();
   const list = document.getElementById('stock-list');
   if (!list) return;
   const q = (document.getElementById('stock-search').value || '').trim().toLowerCase();
@@ -207,11 +206,8 @@ function renderStockPanel() {
   document.getElementById('stock-low-central').textContent = fmtMoney(lowCentral);
   document.getElementById('stock-low-cde').textContent = fmtMoney(lowCde);
   document.getElementById('stock-zero-both').textContent = fmtMoney(zeroBoth);
-  document.getElementById('stock-updated').textContent = stockImportedAt
-    ? 'Última actualización: ' + new Date(stockImportedAt).toLocaleString('es-PY')
-    : 'Todavía no se importó ningún archivo de Lotus.';
   if (!stockSnapshot.length) {
-    list.innerHTML = '<div class="empty-state"><div class="big">Importá el Excel de Lotus</div><div>Acá aparecerán las existencias de Central y CDE.</div></div>';
+    list.innerHTML = '<div class="empty-state"><div class="big">No hay datos de stock disponibles</div><div>Las existencias aparecerán cuando la base de datos principal esté sincronizada.</div></div>';
     document.getElementById('stock-result-count').textContent = '';
     return;
   }
@@ -227,105 +223,6 @@ function renderStockPanel() {
     return '<article class="stock-row"><div class="stock-row-main"><strong>' + escapeHtml(x.code) + '</strong><span>' + escapeHtml(x.description) + '</span></div><div class="stock-values"><span class="' + (cLow ? 'is-low' : '') + '">CENTRAL: <b>' + fmtMoney(x.central) + '</b></span><span class="' + (dLow ? 'is-low' : '') + '">CDE: <b>' + fmtMoney(x.cde) + '</b></span></div></article>';
   }).join('') + (rows.length > 300 ? '<div class="stock-more">Mostrando los primeros 300 resultados. Usá el buscador para acotar.</div>' : '');
 }
-
-function exportStockReplenishment() {
-  if (!window.XLSX) { alert('No se pudo cargar el generador de Excel. Revisá tu conexión a internet.'); return; }
-  if (!stockSnapshot.length) { alert('Primero importá el Excel de Lotus.'); return; }
-  const q = (document.getElementById('stock-search').value || '').trim().toLowerCase();
-  const filter = document.getElementById('stock-filter').value;
-  const group1 = document.getElementById('stock-group1-filter').value;
-  const group2 = document.getElementById('stock-group2-filter').value;
-  const group3 = document.getElementById('stock-group3-filter').value;
-  let rows = stockSnapshot.filter(x =>
-    (!q || String(x.code || '').toLowerCase().includes(q) || String(x.description || '').toLowerCase().includes(q)) &&
-    (!group1 || x.group1 === group1) &&
-    (!group2 || x.group2 === group2) &&
-    (!group3 || x.group3 === group3)
-  );
-  if (filter === 'low') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT || x.cde < STOCK_LOW_LIMIT);
-  if (filter === 'zero') rows = rows.filter(x => x.central <= 0 && x.cde <= 0);
-  if (filter === 'central') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT);
-  if (filter === 'cde') rows = rows.filter(x => x.cde < STOCK_LOW_LIMIT);
-  if (!rows.length) { alert('No hay productos para exportar con los filtros seleccionados.'); return; }
-  const data = rows.map(x => ({
-    'Agrup. 1': x.group1 || '',
-    'Agrup. 2': x.group2 || '',
-    'Agrup. 3': x.group3 || '',
-    'Código': x.code,
-    'Descripción': x.description,
-    'Stock Central': x.central,
-    'Stock CDE': x.cde,
-    'Stock total': x.central + x.cde,
-    'Cantidad a reponer Central': '',
-    'Cantidad a reponer CDE': '',
-    'Observaciones': ''
-  }));
-  const ws = XLSX.utils.json_to_sheet(data);
-  ws['!cols'] = [{wch:16},{wch:16},{wch:16},{wch:16},{wch:48},{wch:16},{wch:14},{wch:14},{wch:24},{wch:22},{wch:32}];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Listado de reposición');
-  XLSX.writeFile(wb, 'Listado_de_reposicion_' + new Date().toISOString().slice(0,10) + '.xlsx');
-}
-
-function importLotusStock(file) {
-  if (!window.XLSX) { alert('No se pudo cargar el lector de Excel. Revisá tu conexión a internet e intentá nuevamente.'); return; }
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    try {
-      const workbook = XLSX.read(event.target.result, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: '' });
-      const headerIndex = matrix.findIndex(row => {
-        const cells = row.map(normalizeStockHeader);
-        return cells.includes('CODARTICULO') && cells.includes('CENTRAL') && cells.includes('CDE');
-      });
-      if (headerIndex < 0) throw new Error('No se encontraron las columnas Cód.Artículo, CENTRAL y CDE.');
-      const headers = matrix[headerIndex].map(normalizeStockHeader);
-      const codeIndex = headers.indexOf('CODARTICULO');
-      const descIndex = headers.indexOf('DESCRIPCION');
-      const centralIndex = headers.indexOf('CENTRAL');
-      const cdeIndex = headers.indexOf('CDE');
-      const group1Index = headers.findIndex(h => h === 'AGRUP1' || h === 'AGRUPACION1' || h === 'GRUPO1');
-      const group2Index = headers.findIndex(h => h === 'AGRUP2' || h === 'AGRUPACION2' || h === 'GRUPO2');
-      const group3Index = headers.findIndex(h => h === 'AGRUP3' || h === 'AGRUPACION3' || h === 'GRUPO3');
-      const legacyGroupIndex = headers.findIndex(h => (h.includes('AGRUPACION') || h.startsWith('GRUPO') || h === 'AGRUP' || h.startsWith('FAMILIA')) && !/^AGRUP[123]$/.test(h) && !/^GRUPO[123]$/.test(h));
-      const imported = [];
-      const seen = new Set();
-      for (const row of matrix.slice(headerIndex + 1)) {
-        const code = normalizeStockCode(row[codeIndex]);
-        if (!code || seen.has(code)) continue;
-        seen.add(code);
-        imported.push({
-          code,
-          description: String(row[descIndex] || byCode.get(code)?.d || '').trim(),
-          group1: group1Index >= 0 ? String(row[group1Index] || '').trim() : '',
-          group2: group2Index >= 0 ? String(row[group2Index] || '').trim() : '',
-          group3: group3Index >= 0 ? String(row[group3Index] || '').trim() : '',
-          group: legacyGroupIndex >= 0 ? String(row[legacyGroupIndex] || '').trim() : '',
-          central: parseStockNumber(row[centralIndex]),
-          cde: parseStockNumber(row[cdeIndex]),
-        });
-      }
-      if (!imported.length) throw new Error('El archivo no contiene productos con código.');
-      const matched = imported.filter(x => byCode.has(x.code)).length;
-      stockSnapshot = imported;
-      refreshStockGroupOptions();
-      stockImportedAt = new Date().toISOString();
-      imported.forEach(row => {
-        const item = byCode.get(row.code);
-        if (item) { item.sc = row.central; item.sd = row.cde; }
-      });
-      localStorage.setItem(STOCK_IMPORT_KEY, JSON.stringify({ importedAt: stockImportedAt, items: stockSnapshot }));
-      renderStockPanel();
-      renderResults();
-      alert('Importación completada: ' + imported.length.toLocaleString('es-PY') + ' productos. Coincidencias con el catálogo: ' + matched.toLocaleString('es-PY') + ((group1Index >= 0 || group2Index >= 0 || group3Index >= 0) ? '. Columnas detectadas: ' + [group1Index >= 0 ? 'Agrup. 1' : '', group2Index >= 0 ? 'Agrup. 2' : '', group3Index >= 0 ? 'Agrup. 3' : ''].filter(Boolean).join(', ') + '.' : '. ATENCIÓN: no se encontraron columnas Agrup. 1, Agrup. 2 ni Agrup. 3 en este Excel.'));
-    } catch (error) {
-      alert('No se pudo importar el archivo: ' + error.message);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
 
 function priceOf(item, tier) {
   return tier === 1 ? item.p1 : tier === 2 ? item.p2 : item.p3;
@@ -693,19 +590,9 @@ tabButtons.forEach((btn) => {
 });
 
 // ---------- Eventos del inventario ----------
-const importStockButton = document.getElementById('btn-import-stock');
-const stockFileInput = document.getElementById('stock-file-input');
-importStockButton.addEventListener('click', () => stockFileInput.click());
-stockFileInput.addEventListener('change', () => {
-  const file = stockFileInput.files && stockFileInput.files[0];
-  if (file) importLotusStock(file);
-  stockFileInput.value = '';
-});
 document.getElementById('stock-search').addEventListener('input', renderStockPanel);
 document.getElementById('stock-filter').addEventListener('change', renderStockPanel);
 ['stock-group1-filter', 'stock-group2-filter', 'stock-group3-filter'].forEach(id => document.getElementById(id).addEventListener('change', renderStockPanel));
-document.getElementById('btn-export-stock').addEventListener('click', exportStockReplenishment);
-
 
 // ---------- Selector de precio (global) ----------
 const tierButtons = document.querySelectorAll('.tier-btn');
@@ -1377,171 +1264,6 @@ resumenToggle.addEventListener('click', () => {
   resumenToggleArrow.textContent = isOpen ? '▾' : '▴';
 });
 
-// ---------- Exportar a Excel (CSV) ----------
-function csvEscape(v) {
-  const s = String(v == null ? '' : v);
-  if (/[;"\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
-  return s;
-}
-
-function buildExportCsv() {
-  const rows = [];
-  rows.push(
-    [
-      'Sección', 'Vendedor', 'Cliente', 'CódigoCliente', 'Ciudad', 'Condición', 'Estado',
-      'Fecha', 'CódigoArtículo', 'Descripción', 'Cantidad', 'ListaPrecio', 'PrecioUnitario', 'Subtotal',
-      'DescuentoPorcentaje', 'DescuentoGs', 'TotalPedidoConDescuento',
-    ]
-      .map(csvEscape)
-      .join(';')
-  );
-  const addEntries = (entries, seccion) => {
-    entries.forEach((entry) => {
-      const fecha = entry.updatedAt ? new Date(entry.updatedAt).toLocaleString('es-PY') : '';
-      (entry.lines || []).forEach((line) => {
-        const item = byCode.get(line.code);
-        if (!item) return;
-        const price = priceOf(item, line.tier);
-        const subtotal = price * line.qty;
-        const pedidoSubtotal = archiveOrderSubtotal(entry);
-        const descuentoPct = normalizedDiscountPct(entry.discountPct || 0);
-        const descuentoGs = discountValue(pedidoSubtotal, descuentoPct);
-        const totalPedido = orderNetTotal(pedidoSubtotal, descuentoPct);
-        rows.push(
-          [
-            seccion, entry.vendedor || '', entry.cliente || '', entry.clienteCodigo || '',
-            entry.clienteCiudad || '', entry.condicion || '', entry.estado || '', fecha,
-            item.c, item.d, line.qty, 'M' + line.tier, price, subtotal,
-            descuentoPct, descuentoGs, totalPedido,
-          ]
-            .map(csvEscape)
-            .join(';')
-        );
-      });
-    });
-  };
-  addEntries(archive, 'Archivo');
-  addEntries(historico, 'Histórico');
-  return rows.join('\r\n');
-}
-
-document.getElementById('btn-exportar-csv').addEventListener('click', () => {
-  if (!archive.length && !historico.length) {
-    showToast('No hay pedidos archivados para exportar');
-    return;
-  }
-  const csv = '\uFEFF' + buildExportCsv();
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const fecha = new Date().toISOString().slice(0, 10);
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `pedidos_koeju_${fecha}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-  showToast('Exportado ✓ revisá la carpeta Descargas');
-});
-
-// ---------- Respaldo manual (exportar / restaurar) ----------
-document.getElementById('btn-exportar-respaldo').addEventListener('click', () => {
-  if (!archive.length && !historico.length) {
-    showToast('No hay nada para respaldar todavía');
-    return;
-  }
-  const backup = {
-    tipo: 'respaldo_pedidos_koeju',
-    version: 1,
-    exportadoEl: new Date().toISOString(),
-    archive,
-    historico,
-    favItems: [...favItems],
-    favClientes: [...favClientes],
-  };
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-  const fecha = new Date().toISOString().slice(0, 10);
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `respaldo_pedidos_${fecha}.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-  showToast('Respaldo exportado ✓');
-});
-
-const inputRestaurar = document.getElementById('input-restaurar-respaldo');
-document.getElementById('btn-restaurar-respaldo').addEventListener('click', () => {
-  inputRestaurar.value = '';
-  inputRestaurar.click();
-});
-
-inputRestaurar.addEventListener('change', () => {
-  const file = inputRestaurar.files && inputRestaurar.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    let data;
-    try {
-      data = JSON.parse(reader.result);
-    } catch (e) {
-      openModal('No se pudo leer el archivo', 'El archivo elegido no es un respaldo válido.', [
-        { label: 'Entendido', variant: 'primary', action: closeModal },
-      ]);
-      return;
-    }
-    const nuevosArchive = Array.isArray(data.archive) ? data.archive : [];
-    const nuevosHistorico = Array.isArray(data.historico) ? data.historico : [];
-    if (!nuevosArchive.length && !nuevosHistorico.length) {
-      openModal('Respaldo vacío', 'Ese archivo no tiene pedidos para restaurar.', [
-        { label: 'Entendido', variant: 'primary', action: closeModal },
-      ]);
-      return;
-    }
-    openModal(
-      'Restaurar respaldo',
-      `Se van a sumar ${nuevosArchive.length} pedido(s) del archivo y ${nuevosHistorico.length} del histórico de ese respaldo a lo que ya tenés acá (no se borra nada existente; los pedidos repetidos no se duplican).`,
-      [
-        { label: 'Cancelar', variant: 'outline', action: closeModal },
-        {
-          label: 'Restaurar',
-          variant: 'primary',
-          action: () => {
-            const archiveIds = new Set(archive.map((o) => o.id));
-            nuevosArchive.forEach((o) => {
-              if (o && o.id && !archiveIds.has(o.id)) {
-                archive.push(o);
-                archiveIds.add(o.id);
-              }
-            });
-            const historicoIds = new Set(historico.map((o) => o.id));
-            nuevosHistorico.forEach((o) => {
-              if (o && o.id && !historicoIds.has(o.id)) {
-                historico.push(o);
-                historicoIds.add(o.id);
-              }
-            });
-            if (Array.isArray(data.favItems)) data.favItems.forEach((c) => favItems.add(c));
-            if (Array.isArray(data.favClientes)) data.favClientes.forEach((c) => favClientes.add(c));
-            saveArchive();
-            saveHistorico();
-            saveFavItems();
-            saveFavClientes();
-            renderArchive();
-            renderHistorico();
-            renderRankings();
-            closeModal();
-            showToast('Respaldo restaurado ✓');
-          },
-        },
-      ]
-    );
-  };
-  reader.readAsText(file);
-});
-
 // ---------- Banner "editando pedido archivado" ----------
 const editingBanner = document.getElementById('editing-banner');
 const editingBannerText = document.getElementById('editing-banner-text');
@@ -2037,7 +1759,6 @@ function cssEscape(str) {
 }
 
 // ---------- Init ----------
-loadStockImport();
 loadArchive();
 loadHistorico();
 loadFavItems();
