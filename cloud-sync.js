@@ -335,12 +335,18 @@
           const workbook=XLSX.read(event.target.result,{type:'array'});
           const sheet=workbook.Sheets[workbook.SheetNames[0]];
           const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,raw:true,defval:''});
-          const headerIndex=matrix.findIndex(row=>{
-            const h=row.map(normalizeStockHeader);
-            return h.includes('CODARTICULO')&&h.includes('CENTRAL')&&h.includes('CDE');
+          // Algunos reportes de Lotus separan CENTRAL/CDE en una fila superior
+          // y los demás encabezados (incluido Cód.Artículo) en la fila siguiente.
+          const headerIndex=matrix.findIndex((row,i)=>{
+            const current=row.map(normalizeStockHeader);
+            const previous=i>0?matrix[i-1].map(normalizeStockHeader):[];
+            const combined=current.map((h,j)=>h||previous[j]||'');
+            return combined.includes('CODARTICULO')&&combined.includes('CENTRAL')&&combined.includes('CDE');
           });
-          if(headerIndex<0) throw new Error('No se detectaron las columnas Cód.Artículo, CENTRAL y CDE.');
-          const headers=matrix[headerIndex].map(normalizeStockHeader);
+          if(headerIndex<0) throw new Error('No se detectaron las columnas Cód.Artículo, CENTRAL y CDE. Revisá que el Excel contenga esos encabezados.');
+          const currentHeaders=matrix[headerIndex].map(normalizeStockHeader);
+          const previousHeaders=headerIndex>0?matrix[headerIndex-1].map(normalizeStockHeader):[];
+          const headers=currentHeaders.map((h,i)=>h||previousHeaders[i]||'');
           const find=(names)=>headers.findIndex(h=>names.includes(h));
           const idx={
             code:find(['CODARTICULO']),central:find(['CENTRAL']),cde:find(['CDE']),
