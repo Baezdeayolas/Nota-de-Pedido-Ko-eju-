@@ -84,6 +84,7 @@
   <button class="tab-btn" data-panel="panel-order">Pedido <span class="count" id="tab-order-count">0</span></button>
   <button class="tab-btn" data-panel="panel-archive">Archivo <span class="count" id="tab-archive-count">0</span></button>
   <button class="tab-btn" data-panel="panel-stock">Stock</button>
+  <button class="tab-btn" data-panel="panel-admin" id="admin-menu-tab" style="display:none;">Administración</button>
 </nav>
 
 <main>
@@ -116,6 +117,10 @@
       <div class="big">Todavía no agregaste artículos</div>
       <div>Buscá por código o descripción en la pestaña "Buscar".</div>
     </div>
+  </section>
+
+  <section id="panel-admin" class="panel">
+    <div id="admin-panel-content" class="admin-panel-content"></div>
   </section>
 
   <section id="panel-stock" class="panel">
