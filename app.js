@@ -136,6 +136,7 @@ function syncArchiveFromDraft() {
   }
   saveArchive();
   renderArchive();
+  renderDashboard();
 }
 
 // ---------- Índice de búsqueda ----------
@@ -1107,6 +1108,30 @@ function confirmDeleteHistorico(id) {
   );
 }
 
+// ---------- Panel de resumen del día ----------
+function renderDashboard() {
+  const orders = archive.concat(historico);
+  const now = new Date();
+  const todayKey = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-');
+  const todaysOrders = orders.filter((entry) => {
+    const date = new Date(entry.createdAt || entry.updatedAt || 0);
+    if (!Number.isFinite(date.getTime())) return false;
+    const key = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+    return key === todayKey;
+  });
+  const units = todaysOrders.reduce((sum, entry) => sum + (entry.lines || []).reduce((n, line) => n + Math.max(0, Number(line.qty) || 0), 0), 0);
+  const sales = todaysOrders.reduce((sum, entry) => sum + archiveOrderTotal(entry), 0);
+  const pending = todaysOrders.filter((entry) => (entry.estado || 'pendiente') === 'pendiente').length;
+  const dateLabel = now.toLocaleDateString('es-PY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('dashboard-date').textContent = dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1);
+  document.getElementById('dashboard-orders').textContent = todaysOrders.length.toLocaleString('es-PY');
+  document.getElementById('dashboard-units').textContent = units.toLocaleString('es-PY');
+  document.getElementById('dashboard-sales').textContent = 'Gs. ' + fmtMoney(sales);
+  document.getElementById('dashboard-pending').textContent = pending.toLocaleString('es-PY');
+}
+
+document.getElementById('dashboard-refresh').addEventListener('click', renderDashboard);
+
 // ---------- Resumen por vendedor ----------
 const resumenToggle = document.getElementById('resumen-toggle');
 const resumenToggleLabel = document.getElementById('resumen-toggle-label');
@@ -1250,6 +1275,7 @@ rankingArticulosToggle.addEventListener('click', () => {
 });
 
 function renderRankings() {
+  renderDashboard();
   renderResumen();
   renderRankingClientes();
   renderRankingArticulos();
@@ -1787,6 +1813,7 @@ updateFooter();
 renderArchive();
 renderHistorico();
 renderRankings();
+renderDashboard();
 renderEditingBanner();
 renderStockPanel();
 
