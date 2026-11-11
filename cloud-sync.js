@@ -15,7 +15,10 @@
     .cloud-bar{padding:8px 12px;background:#34443D;color:#EAE3D3;font:13px sans-serif;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .cloud-bar input{min-width:0;flex:1;padding:8px;border-radius:6px;border:1px solid #aaa}
     .cloud-bar button{padding:8px 10px;border-radius:6px;background:#C99A3C;color:#20302B;font-weight:700}
-    .cloud-status{font-size:12px;opacity:.9;flex-basis:100%}
+    .cloud-status{font-size:12px;opacity:.98;flex:1 1 calc(100% - 24px);line-height:1.4}
+    .cloud-status-dot{width:10px;height:10px;border-radius:50%;background:#D6B65D;flex:0 0 10px;box-shadow:0 0 0 3px rgba(255,255,255,.12)}
+    .cloud-status-dot.connected{background:#72D69A}.cloud-status-dot.error,.cloud-status-dot.offline{background:#FF7777}
+    .cloud-last-sync{flex-basis:100%;font-size:11px;color:#E2C47E;padding-left:18px;line-height:1.35}
     .admin-panel-content{padding:14px 12px 100px}.admin-heading{margin:2px 2px 12px}.admin-heading h2{margin:0;font-size:21px}.admin-heading p,.admin-note{color:#65716a;font-size:12px;line-height:1.5}
     .admin-section{background:#fff;border:1px solid #d8ddd7;border-radius:12px;padding:13px;margin:10px 0}.admin-section h3{margin:0 0 10px;font-size:16px}
     .admin-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}.admin-filters label,.admin-user-form label{display:block;font-size:12px;color:#526057}
@@ -39,9 +42,37 @@
   document.body.appendChild(gate);
   const bar = document.createElement('section');
   bar.className = 'cloud-bar';
-  bar.innerHTML = '<span id="cloud-status" class="cloud-status">Sin conexión a la cuenta</span>';
+  bar.innerHTML = '<span id="cloud-status-dot" class="cloud-status-dot" aria-hidden="true"></span><span id="cloud-status" class="cloud-status" role="status" aria-live="polite">Verificando conexión...</span><span id="cloud-last-sync" class="cloud-last-sync">Última sincronización: todavía no registrada</span>';
   document.querySelector('.topbar').appendChild(bar);
-  const status = (s) => { $('cloud-status').textContent = s; $('auth-status').textContent = s; };
+  let lastSyncAt = null;
+  const syncStampKey = () => user ? 'koeju_last_sync_user_'+user.id : '';
+  const formatSyncTime = value => value ? new Date(value).toLocaleString('es-PY',{dateStyle:'short',timeStyle:'short'}) : 'todavía no registrada';
+  function paintConnection(kind){
+    const dot=$('cloud-status-dot');
+    if(dot) dot.className='cloud-status-dot '+kind;
+  }
+  function updateLastSync(value){
+    lastSyncAt=value||null;
+    const el=$('cloud-last-sync');
+    if(el) el.textContent='Última sincronización: '+formatSyncTime(lastSyncAt);
+  }
+  function markSynced(){
+    if(!user) return;
+    const stamp=new Date().toISOString();
+    try{localStorage.setItem(syncStampKey(),stamp);}catch(_){}
+    updateLastSync(stamp);
+    paintConnection(navigator.onLine?'connected':'offline');
+  }
+  function status(s){
+    const message=String(s||'');
+    const el=$('cloud-status');
+    if(el) el.textContent=message;
+    const auth=$('auth-status');if(auth) auth.textContent=message;
+    const bad=/error|no se pudo|no se sincronizó|sin conexión|desconectad/i.test(message);
+    paintConnection(!navigator.onLine?'offline':bad?'error':'connected');
+  }
+  window.addEventListener('online',()=>status('Conexión a internet restablecida. Verificando sincronización...'));
+  window.addEventListener('offline',()=>status('Sin conexión a internet. Los cambios locales podrían no llegar a la nube hasta recuperar conexión.'));
   const toastSafe = (s) => { if (typeof showToast === 'function') showToast(s); else status(s); };
   const orderKey = (source,id) => source+':'+String(id);
   const mergeById = (base, incoming) => {
@@ -91,6 +122,8 @@
     historico=mergeById(readArray(historyKey),h);
     persistCurrentCollections();
     renderArchive(); renderHistorico(); renderRankings();
+    markSynced();
+    status('Conectado: datos descargados y sincronizados con la nube.');
   }
   function syncCollection(items,source) {
     if(!user || !profile || !Array.isArray(items)) return Promise.resolve();
@@ -129,7 +162,13 @@
         if(!deleted || deleted.length!==1) throw new Error('No se confirmó la eliminación del pedido '+legacyId+'.');
         owners.delete(key);
       }
-      if(rows.length) status('Nube confirmada: '+rows.length+' pedido(s) de '+source+' guardado(s).');
+      if(rows.length){
+        markSynced();
+        status('Sincronización confirmada: '+rows.length+' pedido(s) de '+(source==='archive'?'Archivo':'Histórico')+'.');
+      }else{
+        markSynced();
+        status('Conectado: no hay cambios pendientes en '+(source==='archive'?'Archivo':'Histórico')+'.');
+      }
     }).catch(error=>{status('Error al sincronizar: '+(error.message||error));});
     return syncQueue;
   }
@@ -177,6 +216,7 @@
     const {data:p,error:pe}=await client.from('profiles').select('role,seller_label').eq('id',user.id).single();
     if(pe) throw pe;
     profile=p;
+    try{updateLastSync(localStorage.getItem(syncStampKey()));}catch(_){updateLastSync(null);}
     const {data:as,error:ae}=await client.from('seller_assignments').select('seller_label').eq('user_id',user.id);
     if(ae && profile.role!=='admin') throw ae;
     assignments=(as||[]).map(x=>x.seller_label);
