@@ -1423,7 +1423,7 @@ function generatePdfBytes(orderState) {
   }
 
   function drawMiniHeader() {
-    const emitter = String(window.KOEJU_EMITTER_EMAIL || '').trim().toUpperCase();
+    const emitter = String(window.KOEJU_EMITTER_EMAIL || '').trim();
     addText(marginLeft, 824, 6.5, false, 'AB SYSTEM');
     addText(marginLeft, 814, 6.5, false, 'Emitido por ' + (emitter || ''));
     addRight(marginRight, 824, 6.5, false, "Pedido Ko'eju Rory S. A");
