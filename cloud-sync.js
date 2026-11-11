@@ -39,9 +39,22 @@
       state.vendedor = ''; select.value = ''; saveState();
     }
   }
+  const scopedKey = (base) => base + '_user_' + user.id;
+  const readArray = (key) => {
+    try { const value=JSON.parse(localStorage.getItem(key)||'[]'); return Array.isArray(value)?value:[]; }
+    catch (_) { return []; }
+  };
+  function persistCurrentCollections() {
+    if(!user || !profile) return;
+    const aKey=profile.role==='admin'?ARCHIVE_KEY:scopedKey(ARCHIVE_KEY);
+    const hKey=profile.role==='admin'?HISTORICO_KEY:scopedKey(HISTORICO_KEY);
+    localStorage.setItem(aKey,JSON.stringify(archive));
+    localStorage.setItem(hKey,JSON.stringify(historico));
+  }
   async function loadCloudOrders() {
     const {data,error}=await client.from('orders').select('id,owner_id,legacy_id,legacy_source,payload,updated_at');
     if(error) throw error;
+    owners.clear();
     const a=[],h=[];
     (data||[]).forEach(row=>{
       owners.set(orderKey(row.legacy_source,row.legacy_id),row.owner_id);
@@ -49,10 +62,13 @@
       if(row.legacy_source==='archive') a.push(p);
       if(row.legacy_source==='history') h.push(p);
     });
-    archive=mergeById(archive,a);
-    historico=mergeById(historico,h);
-    localStorage.setItem(ARCHIVE_KEY,JSON.stringify(archive));
-    localStorage.setItem(HISTORICO_KEY,JSON.stringify(historico));
+    const archiveKey=profile.role==='admin'?ARCHIVE_KEY:scopedKey(ARCHIVE_KEY);
+    const historyKey=profile.role==='admin'?HISTORICO_KEY:scopedKey(HISTORICO_KEY);
+    // Admin conserva y combina el archivo histórico legado del dispositivo.
+    // Cada vendedor utiliza una caché separada por UID y nunca lee la caché global.
+    archive=mergeById(readArray(archiveKey),a);
+    historico=mergeById(readArray(historyKey),h);
+    persistCurrentCollections();
     renderArchive(); renderHistorico(); renderRankings();
   }
   function syncCollection(items,source) {
@@ -85,9 +101,11 @@
       );
       for(const [key,ownerId] of obsolete){
         const legacyId=key.slice(source.length+1);
-        const {error}=await client.from('orders').delete()
-          .eq('owner_id',ownerId).eq('legacy_source',source).eq('legacy_id',legacyId);
+        const {data:deleted,error}=await client.from('orders').delete()
+          .eq('owner_id',ownerId).eq('legacy_source',source).eq('legacy_id',legacyId)
+          .select('id');
         if(error) throw error;
+        if(!deleted || deleted.length!==1) throw new Error('No se confirmó la eliminación del pedido '+legacyId+'.');
         owners.delete(key);
       }
       if(rows.length) status('Nube confirmada: '+rows.length+' pedido(s) de '+source+' guardado(s).');
@@ -96,8 +114,16 @@
   }
   function installSaveHooks() {
     const oldA=saveArchive, oldH=saveHistorico;
-    saveArchive=function(){ oldA(); return syncCollection(archive,'archive'); };
-    saveHistorico=function(){ oldH(); return syncCollection(historico,'history'); };
+    saveArchive=function(){
+      if(user && profile && profile.role==='seller') localStorage.setItem(scopedKey(ARCHIVE_KEY),JSON.stringify(archive));
+      else oldA();
+      return syncCollection(archive,'archive');
+    };
+    saveHistorico=function(){
+      if(user && profile && profile.role==='seller') localStorage.setItem(scopedKey(HISTORICO_KEY),JSON.stringify(historico));
+      else oldH();
+      return syncCollection(historico,'history');
+    };
   }
   async function migrateLocal() {
     if(!user || profile.role!=='admin') return;
@@ -134,6 +160,9 @@
     assignments=(as||[]).map(x=>x.seller_label);
     if(profile.role==='seller' && !assignments.length) throw new Error('Esta cuenta no tiene vendedores asignados.');
     if(profile.role!=='admin' && profile.role!=='seller') throw new Error('El perfil no tiene un rol autorizado.');
+    // Al cambiar de cuenta, nunca reutilizar en memoria los pedidos de la sesión anterior.
+    archive=profile.role==='admin'?readArray(ARCHIVE_KEY):readArray(scopedKey(ARCHIVE_KEY));
+    historico=profile.role==='admin'?readArray(HISTORICO_KEY):readArray(scopedKey(HISTORICO_KEY));
     applySellerPermissions();
     await loadCloudOrders();
     $('cloud-email').style.display='none'; $('cloud-password').style.display='none';
@@ -157,6 +186,9 @@
   }
   async function logout() {
     await client.auth.signOut(); user=null;profile=null;assignments=[];owners.clear();
+    // Vaciar la vista al cerrar sesión; las cachés y el archivo legado permanecen intactos.
+    archive=[]; historico=[];
+    renderArchive(); renderHistorico(); renderRankings();
     const select=$('vendedor-input');
     select.innerHTML='<option value="">Vendedor</option>'+labelOptions.map(v=>'<option value="'+String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+v+'</option>').join('');
     $('cloud-email').style.display='';$('cloud-password').style.display='';
