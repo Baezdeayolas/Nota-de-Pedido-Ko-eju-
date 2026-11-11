@@ -998,3 +998,10 @@ main {
 .stock-head-actions { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
 .stock-head-actions button { font-size:11px; }
 .stock-controls { grid-template-columns:1fr; }
+
+
+/* Herramientas dentro de Administración */
+.admin-tools { margin: 12px; padding: 14px; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
+.admin-tools h2 { margin: 0 0 4px; font-size: 16px; }
+.admin-tools p { margin: 0 0 10px; color: var(--ink-soft); font-size: 12px; }
+.admin-tools button { padding: 9px 12px; border-radius: 8px; font: 600 13px var(--font-body); }
