@@ -4,7 +4,8 @@
   const SUPABASE_KEY = 'sb_publishable_LvTZSQUAAUvBC5MZtdiirQ_rBxkruAC';
   const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const $ = (id) => document.getElementById(id);
-  let user = null, profile = null, assignments = [], syncing = false;
+  let user = null, profile = null, assignments = [];
+  let syncQueue = Promise.resolve();
   const owners = new Map();
   const labelOptions = Array.from($('vendedor-input').options).map(o => o.value).filter(Boolean);
   const css = document.createElement('style');
@@ -54,22 +55,39 @@
     localStorage.setItem(HISTORICO_KEY,JSON.stringify(historico));
     renderArchive(); renderHistorico(); renderRankings();
   }
-  async function syncCollection(items,source) {
-    if(!user || syncing || !Array.isArray(items)) return;
-    const allowed = profile.role==='admin' ? labelOptions : assignments;
-    const rows=items.filter(x=>x && x.id && x.vendedor && allowed.includes(x.vendedor)).map(x=>({
-      owner_id:owners.get(orderKey(source,x.id)) || user.id,
-      legacy_id:String(x.id),legacy_source:source,payload:x,updated_at:new Date().toISOString()
-    }));
-    if(!rows.length) return;
-    const {error}=await client.from('orders').upsert(rows,{onConflict:'owner_id,legacy_source,legacy_id'});
-    if(error) { status('Error al sincronizar: '+error.message); return; }
-    rows.forEach(r=>owners.set(orderKey(source,r.legacy_id),r.owner_id));
+  function syncCollection(items,source) {
+    if(!user || !profile || !Array.isArray(items)) return Promise.resolve();
+    const snapshot=items.filter(x=>x && x.id && x.vendedor);
+    syncQueue=syncQueue.then(async()=>{
+      const allowed = profile.role==='admin' ? labelOptions : assignments;
+      const rows=snapshot.filter(x=>allowed.includes(x.vendedor)).map(x=>({
+        owner_id:owners.get(orderKey(source,x.id)) || user.id,
+        legacy_id:String(x.id),legacy_source:source,payload:x,updated_at:new Date().toISOString()
+      }));
+      if(rows.length){
+        const {error}=await client.from('orders').upsert(rows,{onConflict:'owner_id,legacy_source,legacy_id'});
+        if(error) throw error;
+        rows.forEach(r=>owners.set(orderKey(source,r.legacy_id),r.owner_id));
+      }
+      const currentIds=new Set(snapshot.map(x=>String(x.id)));
+      const obsolete=[...owners.entries()].filter(([key,ownerId])=>
+        key.startsWith(source+':') && !currentIds.has(key.slice(source.length+1)) &&
+        (profile.role==='admin' || ownerId===user.id)
+      );
+      for(const [key,ownerId] of obsolete){
+        const legacyId=key.slice(source.length+1);
+        const {error}=await client.from('orders').delete()
+          .eq('owner_id',ownerId).eq('legacy_source',source).eq('legacy_id',legacyId);
+        if(error) throw error;
+        owners.delete(key);
+      }
+    }).catch(error=>{status('Error al sincronizar: '+(error.message||error));});
+    return syncQueue;
   }
   function installSaveHooks() {
     const oldA=saveArchive, oldH=saveHistorico;
-    saveArchive=function(){ oldA(); syncCollection(archive,'archive'); };
-    saveHistorico=function(){ oldH(); syncCollection(historico,'history'); };
+    saveArchive=function(){ oldA(); return syncCollection(archive,'archive'); };
+    saveHistorico=function(){ oldH(); return syncCollection(historico,'history'); };
   }
   async function migrateLocal() {
     if(!user || profile.role!=='admin') return;
