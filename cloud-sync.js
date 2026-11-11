@@ -38,7 +38,7 @@
   document.body.appendChild(gate);
   const bar = document.createElement('section');
   bar.className = 'cloud-bar';
-  bar.innerHTML = '<button id="cloud-logout" style="display:none">Cerrar sesión</button><button id="cloud-migrate" style="display:none">Migrar datos de este dispositivo</button><span id="cloud-status" class="cloud-status">Sin conexión a la cuenta</span>';
+  bar.innerHTML = '<button id="cloud-logout" style="display:none">Cerrar sesión</button><span id="cloud-status" class="cloud-status">Sin conexión a la cuenta</span>';
   document.querySelector('.topbar').appendChild(bar);
   const status = (s) => { $('cloud-status').textContent = s; $('auth-status').textContent = s; };
   const toastSafe = (s) => { if (typeof showToast === 'function') showToast(s); else status(s); };
