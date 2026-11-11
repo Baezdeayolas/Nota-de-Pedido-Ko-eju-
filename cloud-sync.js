@@ -21,13 +21,24 @@
     .admin-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}.admin-metric{background:#20302B;color:#fff;border-radius:9px;padding:11px}.admin-metric span{display:block;color:#e2c47e;font-size:11px}.admin-metric strong{display:block;font-size:19px;margin-top:4px}
     .admin-report-row{display:flex;justify-content:space-between;gap:8px;padding:9px 2px;border-bottom:1px solid #e5e8e3;font-size:13px}.admin-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.admin-actions button{padding:9px 12px;border-radius:7px;background:#20302B;color:#fff;font-weight:600}.admin-actions button.secondary{background:#fff;color:#20302B;border:1px solid #cbd2ca}
     .admin-user-form{display:grid;gap:8px}
+    body.auth-locked > :not(#auth-gate):not(#password-recovery-layer){display:none!important}
+    #auth-gate{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;background:#20302B;min-height:100vh;box-sizing:border-box}
+    .auth-card{width:100%;max-width:390px;box-sizing:border-box;background:#fff;border-radius:16px;padding:26px;box-shadow:0 18px 50px #0004;display:grid;gap:10px;font-family:Arial,sans-serif}
+    .auth-brand{font-size:12px;letter-spacing:3px;font-weight:800;color:#A87925}.auth-card h1{margin:0;color:#20302B;font-size:23px}.auth-card p{margin:0 0 8px;color:#65716a;font-size:13px;line-height:1.45}
+    .auth-card label{font-size:13px;font-weight:700;color:#34443D}.auth-card input{width:100%;box-sizing:border-box;padding:13px;border:1px solid #cbd2ca;border-radius:8px;font-size:16px}
+    .auth-card button{margin-top:6px;padding:13px;border:0;border-radius:8px;background:#C99A3C;color:#20302B;font-size:16px;font-weight:800}.auth-card #auth-status{min-height:18px;margin-top:4px;font-size:12px}
   `;
   document.head.appendChild(css);
+  document.body.classList.add('auth-locked');
+  const gate = document.createElement('section');
+  gate.id = 'auth-gate';
+  gate.innerHTML = '<form id="auth-form" class="auth-card"><div class="auth-brand">AB SYSTEM</div><h1>Pedidos Ko\'eju Rory</h1><p>Ingresá con tu correo y contraseña registrados.</p><label for="auth-email">Correo electrónico</label><input id="auth-email" type="email" required autocomplete="username" placeholder="Correo registrado"><label for="auth-password">Contraseña</label><input id="auth-password" type="password" required autocomplete="current-password" placeholder="Contraseña"><button id="auth-login" type="submit">Ingresar</button><p id="auth-status" role="status" aria-live="polite">Verificando acceso...</p></form>';
+  document.body.appendChild(gate);
   const bar = document.createElement('section');
   bar.className = 'cloud-bar';
-  bar.innerHTML = '<input id="cloud-email" type="email" placeholder="Correo de acceso" autocomplete="username"><input id="cloud-password" type="password" placeholder="Contraseña" autocomplete="current-password"><button id="cloud-login">Ingresar</button><button id="cloud-logout" style="display:none">Salir</button><button id="cloud-migrate" style="display:none">Migrar datos de este dispositivo</button><span id="cloud-status" class="cloud-status">Sin conexión a la cuenta</span>';
+  bar.innerHTML = '<button id="cloud-logout" style="display:none">Cerrar sesión</button><button id="cloud-migrate" style="display:none">Migrar datos de este dispositivo</button><span id="cloud-status" class="cloud-status">Sin conexión a la cuenta</span>';
   document.querySelector('.topbar').appendChild(bar);
-  const status = (s) => $('cloud-status').textContent = s;
+  const status = (s) => { $('cloud-status').textContent = s; $('auth-status').textContent = s; };
   const toastSafe = (s) => { if (typeof showToast === 'function') showToast(s); else status(s); };
   const orderKey = (source,id) => source+':'+String(id);
   const mergeById = (base, incoming) => {
@@ -172,26 +183,30 @@
     historico=profile.role==='admin'?readArray(HISTORICO_KEY):readArray(scopedKey(HISTORICO_KEY));
     applySellerPermissions();
     await loadCloudOrders();
-    $('cloud-email').style.display='none'; $('cloud-password').style.display='none';
-    $('cloud-login').style.display='none'; $('cloud-logout').style.display='';
+    document.body.classList.remove('auth-locked');
+    gate.style.display='none';
+    $('cloud-logout').style.display='';
     $('cloud-migrate').style.display=profile.role==='admin'?'':'none';
     adminTab.style.display=profile.role==='admin'?'':'none';
     if(profile.role==='admin') renderAdminPanel();
     status('Conectado: '+(profile.role==='admin'?'Administrador':assignments.join(', '))+' · sincronización activa');
     $('cloud-password').value='';
   }
-  async function login() {
-    const email=$('cloud-email').value.trim(), password=$('cloud-password').value;
+  async function login(event) {
+    if(event) event.preventDefault();
+    const email=$('auth-email').value.trim(), password=$('auth-password').value;
     if(!email || !password){status('Ingresá correo y contraseña.');return;}
-    $('cloud-login').disabled=true; status('Verificando acceso...');
+    $('auth-login').disabled=true; status('Verificando acceso...');
     try{
       const {data,error}=await client.auth.signInWithPassword({email,password});
       if(error) throw error;
       await activateSession(data.user);
+      $('auth-password').value='';
     }catch(e){
       await client.auth.signOut(); user=null;profile=null;assignments=[];
+      document.body.classList.add('auth-locked');gate.style.display='flex';
       status('No se pudo ingresar: '+(e.message||e));
-    }finally{$('cloud-login').disabled=false;}
+    }finally{$('auth-login').disabled=false;}
   }
   async function logout() {
     await client.auth.signOut(); user=null;profile=null;assignments=[];owners.clear();
@@ -200,12 +215,13 @@
     renderArchive(); renderHistorico(); renderRankings();
     const select=$('vendedor-input');
     select.innerHTML='<option value="">Vendedor</option>'+labelOptions.map(v=>'<option value="'+String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+v+'</option>').join('');
-    $('cloud-email').style.display='';$('cloud-password').style.display='';
-    $('cloud-login').style.display='';$('cloud-logout').style.display='none';$('cloud-migrate').style.display='none';
+    $('cloud-logout').style.display='none';$('cloud-migrate').style.display='none';
     adminTab.style.display='none';$('panel-admin').classList.remove('active');
-    status('Sesión cerrada. Los datos guardados en este dispositivo permanecen.');
+    gate.style.display='flex';document.body.classList.add('auth-locked');
+    $('auth-email').value='';$('auth-password').value='';
+    status('Sesión cerrada. Ingresá nuevamente para usar la aplicación.');
   }
-  $('cloud-login').addEventListener('click',login);
+  $('auth-form').addEventListener('submit',login);
   $('cloud-logout').addEventListener('click',logout);
   $('cloud-migrate').addEventListener('click',migrateLocal);
 
@@ -256,7 +272,7 @@
 
   const recoveryLayer=document.createElement('div');
   recoveryLayer.id='password-recovery-layer';
-  recoveryLayer.style.cssText='display:none;position:fixed;inset:0;background:#20302bcc;z-index:9999;align-items:center;justify-content:center;padding:18px';
+  recoveryLayer.style.cssText='display:none;position:fixed;inset:0;background:#20302bcc;z-index:10002;align-items:center;justify-content:center;padding:18px';
   recoveryLayer.innerHTML='<form id="password-recovery-form" style="background:#fff;padding:20px;border-radius:12px;width:100%;max-width:380px"><h3 style="margin-top:0">Nueva contraseña</h3><p>Ingresá la nueva contraseña para esta cuenta.</p><input id="password-recovery-new" type="password" minlength="8" required autocomplete="new-password" placeholder="Nueva contraseña" style="width:100%;padding:10px;margin:8px 0;border:1px solid #bbb;border-radius:7px"><input id="password-recovery-confirm" type="password" minlength="8" required autocomplete="new-password" placeholder="Repetir contraseña" style="width:100%;padding:10px;margin:8px 0;border:1px solid #bbb;border-radius:7px"><button type="submit" style="padding:10px 14px;background:#20302B;color:white;border-radius:7px">Guardar contraseña</button><p id="password-recovery-status" aria-live="polite"></p></form>';
   document.body.appendChild(recoveryLayer);
   $('password-recovery-form').addEventListener('submit',async e=>{
@@ -289,6 +305,8 @@
       catch(e){await client.auth.signOut();user=null;profile=null;assignments=[];clearUnauthenticatedView();status('Sesión cerrada: '+(e.message||e));}
     } else {
       clearUnauthenticatedView();
+      gate.style.display='flex';document.body.classList.add('auth-locked');
+      status('Ingresá con tu correo y contraseña registrados.');
     }
   });
 })();
