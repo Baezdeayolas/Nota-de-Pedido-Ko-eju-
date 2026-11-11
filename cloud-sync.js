@@ -211,7 +211,7 @@
 
   const adminTab=$('admin-menu-tab'), adminContent=$('admin-panel-content');
   function adminDate(e){return new Date(e.updatedAt||e.createdAt||0);}
-  function adminFiltered(){const from=$('admin-date-from').value,to=$('admin-date-to').value,seller=$('admin-seller-filter').value;return archive.concat(historico).filter(e=>{const d=adminDate(e);return (!from||d>=new Date(from+'T00:00:00'))&&(!to||d<=new Date(to+'T23:59:59.999'))&&(!seller||e.vendedor===seller);});}
+  function adminFiltered(){const from=$('admin-date-from').value,to=$('admin-date-to').value,sellers=Array.from($('admin-seller-filter').selectedOptions).map(o=>o.value).filter(Boolean);return archive.concat(historico).filter(e=>{const d=adminDate(e);return (!from||d>=new Date(from+'T00:00:00'))&&(!to||d<=new Date(to+'T23:59:59.999'))&&(!sellers.length||sellers.includes(e.vendedor));});}
   function renderAdminReport(){
     if(!user||!profile||profile.role!=='admin')return;
     const orders=adminFiltered(), total=orders.reduce((n,e)=>n+archiveOrderTotal(e),0), groups=new Map();
@@ -238,7 +238,7 @@
       <div class="admin-heading"><h2>Administración</h2><p>Panel exclusivo de la cuenta administradora</p></div>
       <section class="admin-section"><h3>Resumen de ventas por vendedor</h3>
         <div class="admin-filters"><label>Desde<input type="date" id="admin-date-from"></label><label>Hasta<input type="date" id="admin-date-to"></label>
-        <label class="wide">Vendedor<select id="admin-seller-filter"><option value="">Todos los vendedores</option>${labelOptions.map(v=>'<option value="'+escapeAttr(v)+'">'+escapeHtml(v)+'</option>').join('')}</select></label></div>
+        <label class="wide">Vendedores <small>(podés seleccionar varios; sin selección se muestran todos)</small><select id="admin-seller-filter" multiple size="5" style="min-height:116px">${labelOptions.map(v=>'<option value="'+escapeAttr(v)+'">'+escapeHtml(v)+'</option>').join('')}</select></label></div>
         <div class="admin-metrics"><div class="admin-metric"><span>Pedidos</span><strong id="admin-total-orders">0</strong></div><div class="admin-metric"><span>Total vendido</span><strong id="admin-total-sales">Gs. 0</strong></div></div>
         <div class="admin-report-row"><span>Vendedores con ventas</span><strong id="admin-seller-count">0</strong></div><div id="admin-report-list"></div>
         <div class="admin-actions"><button id="admin-export-report">Exportar resumen CSV</button><button class="secondary" id="admin-reset-filters">Limpiar filtros</button></div>
@@ -250,7 +250,7 @@
       <section class="admin-section"><h3>Agregar usuarios vendedores</h3><p class="admin-note">Esta opción requiere configurar una función segura en Supabase. No es seguro incluir la clave de administración en la aplicación pública.</p><p class="admin-note"><strong>Pendiente:</strong> alta de nuevas cuentas y asignación inicial desde este menú. Las cuentas existentes siguen funcionando sin cambios.</p></section>`;
     ['admin-date-from','admin-date-to','admin-seller-filter'].forEach(id=>$(id).addEventListener('change',renderAdminReport));
     $('admin-export-report').addEventListener('click',exportAdminReport);
-    $('admin-reset-filters').addEventListener('click',()=>{$('admin-date-from').value='';$('admin-date-to').value='';$('admin-seller-filter').value='';renderAdminReport();});
+    $('admin-reset-filters').addEventListener('click',()=>{$('admin-date-from').value='';$('admin-date-to').value='';Array.from($('admin-seller-filter').options).forEach(o=>o.selected=false);renderAdminReport();});
     $('admin-recovery-btn').addEventListener('click',sendSellerRecovery);renderAdminReport();
   }
 
