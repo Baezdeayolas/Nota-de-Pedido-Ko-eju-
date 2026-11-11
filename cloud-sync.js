@@ -64,9 +64,18 @@
         owner_id:owners.get(orderKey(source,x.id)) || user.id,
         legacy_id:String(x.id),legacy_source:source,payload:x,updated_at:new Date().toISOString()
       }));
+      if(snapshot.length && !rows.length){
+        status('No se sincronizó: ningún pedido coincide con los vendedores asignados a esta cuenta.');
+        return;
+      }
       if(rows.length){
-        const {error}=await client.from('orders').upsert(rows,{onConflict:'owner_id,legacy_source,legacy_id'});
+        const {data:saved,error}=await client.from('orders')
+          .upsert(rows,{onConflict:'owner_id,legacy_source,legacy_id'})
+          .select('id,owner_id,legacy_id');
         if(error) throw error;
+        if(!saved || saved.length!==rows.length){
+          throw new Error('Supabase no confirmó todos los pedidos enviados ('+(saved||[]).length+'/'+rows.length+').');
+        }
         rows.forEach(r=>owners.set(orderKey(source,r.legacy_id),r.owner_id));
       }
       const currentIds=new Set(snapshot.map(x=>String(x.id)));
@@ -81,6 +90,7 @@
         if(error) throw error;
         owners.delete(key);
       }
+      if(rows.length) status('Nube confirmada: '+rows.length+' pedido(s) de '+source+' guardado(s).');
     }).catch(error=>{status('Error al sincronizar: '+(error.message||error));});
     return syncQueue;
   }
