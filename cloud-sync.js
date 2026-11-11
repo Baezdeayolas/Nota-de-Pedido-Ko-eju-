@@ -4,6 +4,8 @@
   const SUPABASE_KEY = 'sb_publishable_LvTZSQUAAUvBC5MZtdiirQ_rBxkruAC';
   const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   const $ = (id) => document.getElementById(id);
+  const setValue = (id, value) => { const el=$(id); if(el) el.value=value; };
+  const getValue = (id) => { const el=$(id); if(!el) throw new Error('No se encontró el campo '+id+' en la pantalla.'); return el.value; };
   let user = null, profile = null, assignments = [];
   let syncQueue = Promise.resolve();
   const owners = new Map();
@@ -194,14 +196,14 @@
   }
   async function login(event) {
     if(event) event.preventDefault();
-    const email=$('auth-email').value.trim(), password=$('auth-password').value;
+    const email=String(getValue('auth-email')||'').trim(), password=getValue('auth-password');
     if(!email || !password){status('Ingresá correo y contraseña.');return;}
     $('auth-login').disabled=true; status('Verificando acceso...');
     try{
       const {data,error}=await client.auth.signInWithPassword({email,password});
       if(error) throw error;
       await activateSession(data.user);
-      $('auth-password').value='';
+      setValue('auth-password','');
     }catch(e){
       await client.auth.signOut(); user=null;profile=null;assignments=[];
       document.body.classList.add('auth-locked');gate.style.display='flex';
@@ -218,7 +220,7 @@
     $('cloud-logout').style.display='none';$('cloud-migrate').style.display='none';
     adminTab.style.display='none';$('panel-admin').classList.remove('active');
     gate.style.display='flex';document.body.classList.add('auth-locked');
-    $('auth-email').value='';$('auth-password').value='';
+    setValue('auth-email','');setValue('auth-password','');
     status('Sesión cerrada. Ingresá nuevamente para usar la aplicación.');
   }
   $('auth-form').addEventListener('submit',login);
@@ -245,7 +247,7 @@
   async function sendSellerRecovery(){
     const email=$('admin-recovery-email').value.trim();if(!email){toastSafe('Ingresá el correo del vendedor.');return;}
     $('admin-recovery-btn').disabled=true;
-    try{const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(error)throw error;toastSafe('Si el correo está registrado, recibirá un enlace de recuperación.');$('admin-recovery-email').value='';}
+    try{const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(error)throw error;toastSafe('Si el correo está registrado, recibirá un enlace de recuperación.');setValue('admin-recovery-email','');}
     catch(e){toastSafe('No se pudo solicitar el cambio: '+(e.message||e));}finally{$('admin-recovery-btn').disabled=false;}
   }
   function renderAdminPanel(){
