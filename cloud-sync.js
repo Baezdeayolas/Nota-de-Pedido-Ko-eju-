@@ -211,7 +211,7 @@
 
   const adminTab=$('admin-menu-tab'), adminContent=$('admin-panel-content');
   function adminDate(e){return new Date(e.updatedAt||e.createdAt||0);}
-  function adminFiltered(){const from=$('admin-date-from').value,to=$('admin-date-to').value,sellers=Array.from($('admin-seller-filter').selectedOptions).map(o=>o.value).filter(Boolean);return archive.concat(historico).filter(e=>{const d=adminDate(e);return (!from||d>=new Date(from+'T00:00:00'))&&(!to||d<=new Date(to+'T23:59:59.999'))&&(!sellers.length||sellers.includes(e.vendedor));});}
+  function adminFiltered(){const from=$('admin-date-from').value,to=$('admin-date-to').value,sellers=Array.from(document.querySelectorAll('#admin-seller-filter input[type=checkbox]:checked')).map(o=>o.value);return archive.concat(historico).filter(e=>{const d=adminDate(e);return (!from||d>=new Date(from+'T00:00:00'))&&(!to||d<=new Date(to+'T23:59:59.999'))&&(!sellers.length||sellers.includes(e.vendedor));});}
   function renderAdminReport(){
     if(!user||!profile||profile.role!=='admin')return;
     const orders=adminFiltered(), total=orders.reduce((n,e)=>n+archiveOrderTotal(e),0), groups=new Map();
@@ -238,7 +238,7 @@
       <div class="admin-heading"><h2>Administración</h2><p>Panel exclusivo de la cuenta administradora</p></div>
       <section class="admin-section"><h3>Resumen de ventas por vendedor</h3>
         <div class="admin-filters"><label>Desde<input type="date" id="admin-date-from"></label><label>Hasta<input type="date" id="admin-date-to"></label>
-        <label class="wide">Vendedores <small>(podés seleccionar varios; sin selección se muestran todos)</small><select id="admin-seller-filter" multiple size="5" style="min-height:116px">${labelOptions.map(v=>'<option value="'+escapeAttr(v)+'">'+escapeHtml(v)+'</option>').join('')}</select></label></div>
+        <div class="wide"><strong>Vendedores</strong><small style="display:block;margin:4px 0 8px">Marcá todos los vendedores que quieras incluir:</small><div id="admin-seller-filter" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;padding:10px;border:1px solid #bbb;border-radius:8px;background:#fff">${labelOptions.map(v=>'<label style="display:flex;align-items:center;gap:8px;padding:6px;min-height:38px"><input type="checkbox" value="'+escapeAttr(v)+'" style="width:18px;height:18px;flex:0 0 auto"> <span>'+escapeHtml(v)+'</span></label>').join('')}</div><small>Sin marcar ninguno se muestran todos.</small></div></div>
         <div class="admin-metrics"><div class="admin-metric"><span>Pedidos</span><strong id="admin-total-orders">0</strong></div><div class="admin-metric"><span>Total vendido</span><strong id="admin-total-sales">Gs. 0</strong></div></div>
         <div class="admin-report-row"><span>Vendedores con ventas</span><strong id="admin-seller-count">0</strong></div><div id="admin-report-list"></div>
         <div class="admin-actions"><button id="admin-export-report">Exportar resumen CSV</button><button class="secondary" id="admin-reset-filters">Limpiar filtros</button></div>
@@ -248,9 +248,9 @@
         <div class="admin-user-form"><label>Correo del vendedor<input id="admin-recovery-email" type="email" placeholder="vendedor@correo.com"></label></div><div class="admin-actions"><button id="admin-recovery-btn">Enviar enlace de recuperación</button></div>
       </section>
       <section class="admin-section"><h3>Agregar usuarios vendedores</h3><p class="admin-note">Esta opción requiere configurar una función segura en Supabase. No es seguro incluir la clave de administración en la aplicación pública.</p><p class="admin-note"><strong>Pendiente:</strong> alta de nuevas cuentas y asignación inicial desde este menú. Las cuentas existentes siguen funcionando sin cambios.</p></section>`;
-    ['admin-date-from','admin-date-to','admin-seller-filter'].forEach(id=>$(id).addEventListener('change',renderAdminReport));
+    ['admin-date-from','admin-date-to'].forEach(id=>$(id).addEventListener('change',renderAdminReport));$('admin-seller-filter').addEventListener('change',renderAdminReport);
     $('admin-export-report').addEventListener('click',exportAdminReport);
-    $('admin-reset-filters').addEventListener('click',()=>{$('admin-date-from').value='';$('admin-date-to').value='';Array.from($('admin-seller-filter').options).forEach(o=>o.selected=false);renderAdminReport();});
+    $('admin-reset-filters').addEventListener('click',()=>{$('admin-date-from').value='';$('admin-date-to').value='';$('admin-seller-filter').querySelectorAll('input[type=checkbox]').forEach(o=>o.checked=false);renderAdminReport();});
     $('admin-recovery-btn').addEventListener('click',sendSellerRecovery);renderAdminReport();
   }
 
