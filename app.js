@@ -152,7 +152,7 @@ function normalizeStockCode(value) {
 }
 
 function normalizeStockHeader(value) {
-  return String(value == null ? '' : value).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return String(value == null ? '' : value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
 function parseStockNumber(value) {
