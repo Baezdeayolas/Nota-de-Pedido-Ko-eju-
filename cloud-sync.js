@@ -12,27 +12,27 @@
   const labelOptions = Array.from($('vendedor-input').options).map(o => o.value).filter(Boolean);
   const css = document.createElement('style');
   css.textContent = `
-    .cloud-bar{padding:8px 12px;background:#34443D;color:#EAE3D3;font:13px sans-serif;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .cloud-bar{padding:8px 12px;background:#36564D;color:#EDF3F0;font:13px sans-serif;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .cloud-bar input{min-width:0;flex:1;padding:8px;border-radius:6px;border:1px solid #aaa}
-    .cloud-bar button{padding:8px 10px;border-radius:6px;background:#C99A3C;color:#20302B;font-weight:700}
+    .cloud-bar button{padding:8px 10px;border-radius:6px;background:#78BFE3;color:#203B35;font-weight:700}
     .cloud-status{font-size:12px;opacity:.98;flex:1 1 calc(100% - 24px);line-height:1.4}
-    .cloud-status-dot{width:10px;height:10px;border-radius:50%;background:#D6B65D;flex:0 0 10px;box-shadow:0 0 0 3px rgba(255,255,255,.12)}
+    .cloud-status-dot{width:10px;height:10px;border-radius:50%;background:#78BFE3;flex:0 0 10px;box-shadow:0 0 0 3px rgba(255,255,255,.12)}
     .cloud-status-dot.connected{background:#72D69A}.cloud-status-dot.error,.cloud-status-dot.offline{background:#FF7777}
     .cloud-last-sync{flex-basis:100%;font-size:11px;color:#E2C47E;padding-left:18px;line-height:1.35}
     .admin-panel-content{padding:14px 12px 100px}.admin-heading{margin:2px 2px 12px}.admin-heading h2{margin:0;font-size:21px}.admin-heading p,.admin-note{color:#65716a;font-size:12px;line-height:1.5}
     .admin-section{background:#fff;border:1px solid #d8ddd7;border-radius:12px;padding:13px;margin:10px 0}.admin-section h3{margin:0 0 10px;font-size:16px}
     .admin-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}.admin-filters label,.admin-user-form label{display:block;font-size:12px;color:#526057}
     .admin-filters input,.admin-filters select,.admin-user-form input{width:100%;min-width:0;padding:9px;border:1px solid #cbd2ca;border-radius:7px;background:#fff;margin-top:4px}.admin-filters .wide{grid-column:1/-1}
-    .admin-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}.admin-metric{background:#20302B;color:#fff;border-radius:9px;padding:11px}.admin-metric span{display:block;color:#e2c47e;font-size:11px}.admin-metric strong{display:block;font-size:19px;margin-top:4px}
-    .admin-report-row{display:flex;justify-content:space-between;gap:8px;padding:9px 2px;border-bottom:1px solid #e5e8e3;font-size:13px}.admin-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.admin-actions button{padding:9px 12px;border-radius:7px;background:#20302B;color:#fff;font-weight:600}.admin-actions button.secondary{background:#fff;color:#20302B;border:1px solid #cbd2ca}
-    .admin-seller-chart{margin:12px 0 8px;padding:11px;background:#f7f8f5;border:1px solid #e1e6df;border-radius:9px}.admin-seller-chart h4{margin:0 0 10px;font-size:12px;color:#526057}.admin-bar-row{display:grid;grid-template-columns:minmax(74px,105px) 1fr;gap:8px;align-items:center;margin:8px 0;font-size:11px}.admin-bar-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:#34443D}.admin-bar-track{height:10px;background:#e2e7e0;border-radius:99px;overflow:hidden}.admin-bar-fill{height:100%;min-width:2px;background:#C99A3C;border-radius:99px}.admin-bar-value{grid-column:2;color:#65716a;font-size:10px;margin-top:-5px}
+    .admin-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}.admin-metric{background:#203B35;color:#fff;border-radius:9px;padding:11px}.admin-metric span{display:block;color:#78BFE3;font-size:11px}.admin-metric strong{display:block;font-size:19px;margin-top:4px}
+    .admin-report-row{display:flex;justify-content:space-between;gap:8px;padding:9px 2px;border-bottom:1px solid #e5e8e3;font-size:13px}.admin-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.admin-actions button{padding:9px 12px;border-radius:7px;background:#203B35;color:#fff;font-weight:600}.admin-actions button.secondary{background:#fff;color:#203B35;border:1px solid #cbd2ca}
+    .admin-seller-chart{margin:12px 0 8px;padding:11px;background:#f7f8f5;border:1px solid #e1e6df;border-radius:9px}.admin-seller-chart h4{margin:0 0 10px;font-size:12px;color:#526057}.admin-bar-row{display:grid;grid-template-columns:minmax(74px,105px) 1fr;gap:8px;align-items:center;margin:8px 0;font-size:11px}.admin-bar-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:#36564D}.admin-bar-track{height:10px;background:#e2e7e0;border-radius:99px;overflow:hidden}.admin-bar-fill{height:100%;min-width:2px;background:#78BFE3;border-radius:99px}.admin-bar-value{grid-column:2;color:#65716a;font-size:10px;margin-top:-5px}
     .admin-user-form{display:grid;gap:8px}
     body.auth-locked > :not(#auth-gate):not(#password-recovery-layer){display:none!important}
-    #auth-gate{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;background:#20302B;min-height:100vh;box-sizing:border-box}
+    #auth-gate{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;background:#203B35;min-height:100vh;box-sizing:border-box}
     .auth-card{width:100%;max-width:390px;box-sizing:border-box;background:#fff;border-radius:16px;padding:26px;box-shadow:0 18px 50px #0004;display:grid;gap:10px;font-family:Arial,sans-serif}
-    .auth-brand{font-size:12px;letter-spacing:3px;font-weight:800;color:#A87925}.auth-card h1{margin:0;color:#20302B;font-size:23px}.auth-card p{margin:0 0 8px;color:#65716a;font-size:13px;line-height:1.45}
-    .auth-card label{font-size:13px;font-weight:700;color:#34443D}.auth-card input{width:100%;box-sizing:border-box;padding:13px;border:1px solid #cbd2ca;border-radius:8px;font-size:16px}
-    .auth-card button{margin-top:6px;padding:13px;border:0;border-radius:8px;background:#C99A3C;color:#20302B;font-size:16px;font-weight:800}.auth-card #auth-status{min-height:18px;margin-top:4px;font-size:12px}
+    .auth-brand{font-size:12px;letter-spacing:3px;font-weight:800;color:#A87925}.auth-card h1{margin:0;color:#203B35;font-size:23px}.auth-card p{margin:0 0 8px;color:#65716a;font-size:13px;line-height:1.45}
+    .auth-card label{font-size:13px;font-weight:700;color:#36564D}.auth-card input{width:100%;box-sizing:border-box;padding:13px;border:1px solid #cbd2ca;border-radius:8px;font-size:16px}
+    .auth-card button{margin-top:6px;padding:13px;border:0;border-radius:8px;background:#78BFE3;color:#203B35;font-size:16px;font-weight:800}.auth-card #auth-status{min-height:18px;margin-top:4px;font-size:12px}
   `;
   document.head.appendChild(css);
   document.body.classList.add('auth-locked');
@@ -442,8 +442,8 @@
 
   const recoveryLayer=document.createElement('div');
   recoveryLayer.id='password-recovery-layer';
-  recoveryLayer.style.cssText='display:none;position:fixed;inset:0;background:#20302bcc;z-index:10002;align-items:center;justify-content:center;padding:18px';
-  recoveryLayer.innerHTML='<form id="password-recovery-form" style="background:#fff;padding:20px;border-radius:12px;width:100%;max-width:380px"><h3 style="margin-top:0">Nueva contraseña</h3><p>Ingresá la nueva contraseña para esta cuenta.</p><input id="password-recovery-new" type="password" minlength="8" required autocomplete="new-password" placeholder="Nueva contraseña" style="width:100%;padding:10px;margin:8px 0;border:1px solid #bbb;border-radius:7px"><input id="password-recovery-confirm" type="password" minlength="8" required autocomplete="new-password" placeholder="Repetir contraseña" style="width:100%;padding:10px;margin:8px 0;border:1px solid #bbb;border-radius:7px"><button type="submit" style="padding:10px 14px;background:#20302B;color:white;border-radius:7px">Guardar contraseña</button><p id="password-recovery-status" aria-live="polite"></p></form>';
+  recoveryLayer.style.cssText='display:none;position:fixed;inset:0;background:#203B35cc;z-index:10002;align-items:center;justify-content:center;padding:18px';
+  recoveryLayer.innerHTML='<form id="password-recovery-form" style="background:#fff;padding:20px;border-radius:12px;width:100%;max-width:380px"><h3 style="margin-top:0">Nueva contraseña</h3><p>Ingresá la nueva contraseña para esta cuenta.</p><input id="password-recovery-new" type="password" minlength="8" required autocomplete="new-password" placeholder="Nueva contraseña" style="width:100%;padding:10px;margin:8px 0;border:1px solid #bbb;border-radius:7px"><input id="password-recovery-confirm" type="password" minlength="8" required autocomplete="new-password" placeholder="Repetir contraseña" style="width:100%;padding:10px;margin:8px 0;border:1px solid #bbb;border-radius:7px"><button type="submit" style="padding:10px 14px;background:#203B35;color:white;border-radius:7px">Guardar contraseña</button><p id="password-recovery-status" aria-live="polite"></p></form>';
   document.body.appendChild(recoveryLayer);
   $('password-recovery-form').addEventListener('submit',async e=>{
     e.preventDefault();
