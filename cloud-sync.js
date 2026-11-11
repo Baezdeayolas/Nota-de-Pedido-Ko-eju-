@@ -22,6 +22,7 @@
     .admin-filters input,.admin-filters select,.admin-user-form input{width:100%;min-width:0;padding:9px;border:1px solid #cbd2ca;border-radius:7px;background:#fff;margin-top:4px}.admin-filters .wide{grid-column:1/-1}
     .admin-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}.admin-metric{background:#20302B;color:#fff;border-radius:9px;padding:11px}.admin-metric span{display:block;color:#e2c47e;font-size:11px}.admin-metric strong{display:block;font-size:19px;margin-top:4px}
     .admin-report-row{display:flex;justify-content:space-between;gap:8px;padding:9px 2px;border-bottom:1px solid #e5e8e3;font-size:13px}.admin-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.admin-actions button{padding:9px 12px;border-radius:7px;background:#20302B;color:#fff;font-weight:600}.admin-actions button.secondary{background:#fff;color:#20302B;border:1px solid #cbd2ca}
+    .admin-seller-chart{margin:12px 0 8px;padding:11px;background:#f7f8f5;border:1px solid #e1e6df;border-radius:9px}.admin-seller-chart h4{margin:0 0 10px;font-size:12px;color:#526057}.admin-bar-row{display:grid;grid-template-columns:minmax(74px,105px) 1fr;gap:8px;align-items:center;margin:8px 0;font-size:11px}.admin-bar-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:#34443D}.admin-bar-track{height:10px;background:#e2e7e0;border-radius:99px;overflow:hidden}.admin-bar-fill{height:100%;min-width:2px;background:#C99A3C;border-radius:99px}.admin-bar-value{grid-column:2;color:#65716a;font-size:10px;margin-top:-5px}
     .admin-user-form{display:grid;gap:8px}
     body.auth-locked > :not(#auth-gate):not(#password-recovery-layer){display:none!important}
     #auth-gate{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;background:#20302B;min-height:100vh;box-sizing:border-box}
@@ -243,7 +244,9 @@
     $('admin-total-units').textContent=units.toLocaleString('es-PY');
     $('admin-total-sales').textContent='Gs. '+fmtMoney(total);
     $('admin-seller-count').textContent=groups.size.toLocaleString('es-PY');
-    $('admin-report-list').innerHTML=[...groups.entries()].sort((a,b)=>b[1].total-a[1].total).map(([name,v])=>'<div class="admin-report-row admin-seller-stat"><span>'+escapeHtml(name)+'<br><small>'+v.count.toLocaleString('es-PY')+' pedidos · '+v.units.toLocaleString('es-PY')+' unidades</small></span><strong>Gs. '+fmtMoney(v.total)+'</strong></div>').join('')||'<p class="admin-note">No hay pedidos para el período seleccionado.</p>';
+    const ranked=[...groups.entries()].sort((a,b)=>b[1].total-a[1].total);
+    const maxSales=Math.max(0,...ranked.map(([,v])=>v.total));
+    $('admin-report-list').innerHTML=ranked.length?'<div class="admin-seller-chart"><h4>Comparativo de ventas por vendedor</h4>'+ranked.map(([name,v])=>{const pct=maxSales>0?Math.max(1,v.total/maxSales*100):0;return '<div class="admin-bar-row"><span class="admin-bar-name" title="'+escapeAttr(name)+'">'+escapeHtml(name)+'</span><div class="admin-bar-track"><div class="admin-bar-fill" style="width:'+pct.toFixed(1)+'%"></div></div><small class="admin-bar-value">Gs. '+fmtMoney(v.total)+'</small></div>';}).join('')+'</div>'+ranked.map(([name,v])=>'<div class="admin-report-row admin-seller-stat"><span>'+escapeHtml(name)+'<br><small>'+v.count.toLocaleString('es-PY')+' pedidos · '+v.units.toLocaleString('es-PY')+' unidades</small></span><strong>Gs. '+fmtMoney(v.total)+'</strong></div>').join(''):'<p class="admin-note">No hay pedidos para el período seleccionado.</p>';
   }
   function exportAdminReport(){
     const orders=adminFiltered();if(!orders.length){toastSafe('No hay ventas para exportar con esos filtros.');return;}
