@@ -172,6 +172,7 @@
   }
   async function activateSession(sessionUser) {
     user=sessionUser;
+    window.KOEJU_EMITTER_EMAIL=String(user.email||'');
     const {data:p,error:pe}=await client.from('profiles').select('role,seller_label').eq('id',user.id).single();
     if(pe) throw pe;
     profile=p;
@@ -213,6 +214,7 @@
   }
   async function logout() {
     await client.auth.signOut(); user=null;profile=null;assignments=[];owners.clear();
+    window.KOEJU_EMITTER_EMAIL='';
     // Vaciar la vista al cerrar sesión; las cachés y el archivo legado permanecen intactos.
     archive=[]; historico=[];
     renderArchive(); renderHistorico(); renderRankings();
