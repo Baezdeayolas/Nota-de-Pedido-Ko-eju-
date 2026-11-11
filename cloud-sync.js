@@ -253,6 +253,26 @@
     $('admin-reset-filters').addEventListener('click',()=>{$('admin-date-from').value='';$('admin-date-to').value='';$('admin-seller-filter').value='';renderAdminReport();});
     $('admin-recovery-btn').addEventListener('click',sendSellerRecovery);renderAdminReport();
   }
+
+  const recoveryLayer=document.createElement('div');
+  recoveryLayer.id='password-recovery-layer';
+  recoveryLayer.style.cssText='display:none;position:fixed;inset:0;background:#20302bcc;z-index:9999;align-items:center;justify-content:center;padding:18px';
+  recoveryLayer.innerHTML='<form id="password-recovery-form" style="background:#fff;padding:20px;border-radius:12px;width:100%;max-width:380px"><h3 style="margin-top:0">Nueva contraseña</h3><p>Ingresá la nueva contraseña para esta cuenta.</p><input id="password-recovery-new" type="password" minlength="8" required autocomplete="new-password" placeholder="Nueva contraseña" style="width:100%;padding:10px;margin:8px 0;border:1px solid #bbb;border-radius:7px"><input id="password-recovery-confirm" type="password" minlength="8" required autocomplete="new-password" placeholder="Repetir contraseña" style="width:100%;padding:10px;margin:8px 0;border:1px solid #bbb;border-radius:7px"><button type="submit" style="padding:10px 14px;background:#20302B;color:white;border-radius:7px">Guardar contraseña</button><p id="password-recovery-status" aria-live="polite"></p></form>';
+  document.body.appendChild(recoveryLayer);
+  $('password-recovery-form').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const a=$('password-recovery-new').value,b=$('password-recovery-confirm').value;
+    if(a.length<8){$('password-recovery-status').textContent='Usá al menos 8 caracteres.';return;}
+    if(a!==b){$('password-recovery-status').textContent='Las contraseñas no coinciden.';return;}
+    const btn=$('password-recovery-form').querySelector('button');btn.disabled=true;
+    const {error}=await client.auth.updateUser({password:a});
+    btn.disabled=false;
+    if(error){$('password-recovery-status').textContent='No se pudo cambiar: '+error.message;return;}
+    recoveryLayer.style.display='none';toastSafe('Contraseña actualizada correctamente.');
+  });
+  client.auth.onAuthStateChange(event=>{
+    if(event==='PASSWORD_RECOVERY') recoveryLayer.style.display='flex';
+  });
   installSaveHooks();
   function clearUnauthenticatedView() {
     archive=[]; historico=[];
