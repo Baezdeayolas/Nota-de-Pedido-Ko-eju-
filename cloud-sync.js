@@ -184,6 +184,7 @@
     archive=profile.role==='admin'?readArray(ARCHIVE_KEY):readArray(scopedKey(ARCHIVE_KEY));
     historico=profile.role==='admin'?readArray(HISTORICO_KEY):readArray(scopedKey(HISTORICO_KEY));
     applySellerPermissions();
+    try{await loadSharedInventory();}catch(inventoryError){status('No se pudieron cargar los datos compartidos de stock y precios: '+(inventoryError.message||inventoryError));}
     await loadCloudOrders();
     document.body.classList.remove('auth-locked');
     gate.style.display='none';
@@ -250,6 +251,115 @@
     try{const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(error)throw error;toastSafe('Si el correo está registrado, recibirá un enlace de recuperación.');setValue('admin-recovery-email','');}
     catch(e){toastSafe('No se pudo solicitar el cambio: '+(e.message||e));}finally{$('admin-recovery-btn').disabled=false;}
   }
+
+  let pendingSharedInventory = null;
+  async function loadSharedInventory() {
+    const {data,error}=await client.from('inventory_current')
+      .select('items,imported_at').eq('id',1).maybeSingle();
+    if(error) throw error;
+    if(!data || !Array.isArray(data.items)) return;
+    let applied=0;
+    data.items.forEach(row=>{
+      const item=byCode.get(String(row.code));
+      if(!item) return;
+      item.sc=Number(row.central)||0;
+      item.sd=Number(row.cde)||0;
+      item.p1=Number(row.p1)||0;
+      item.p2=Number(row.p2)||0;
+      item.p3=Number(row.p3)||0;
+      applied++;
+    });
+    if(typeof renderResults==='function') renderResults();
+    if(typeof renderStockPanel==='function') renderStockPanel();
+    const stamp=data.imported_at?new Date(data.imported_at).toLocaleString('es-PY'):'';
+    const note=$('stock-updated');
+    if(note) note.textContent='Datos compartidos actualizados: '+stamp+' · '+applied.toLocaleString('es-PY')+' artículos del catálogo.';
+  }
+  function parseSharedInventoryFile(file) {
+    return new Promise((resolve,reject)=>{
+      if(!window.XLSX){reject(new Error('No se pudo cargar el lector de Excel.'));return;}
+      const reader=new FileReader();
+      reader.onerror=()=>reject(new Error('No se pudo leer el archivo.'));
+      reader.onload=event=>{
+        try{
+          const workbook=XLSX.read(event.target.result,{type:'array'});
+          const sheet=workbook.Sheets[workbook.SheetNames[0]];
+          const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,raw:true,defval:''});
+          const headerIndex=matrix.findIndex(row=>{
+            const h=row.map(normalizeStockHeader);
+            return h.includes('CODARTICULO')&&h.includes('CENTRAL')&&h.includes('CDE');
+          });
+          if(headerIndex<0) throw new Error('No se detectaron las columnas Cód.Artículo, CENTRAL y CDE.');
+          const headers=matrix[headerIndex].map(normalizeStockHeader);
+          const find=(names)=>headers.findIndex(h=>names.includes(h));
+          const idx={
+            code:find(['CODARTICULO']),central:find(['CENTRAL']),cde:find(['CDE']),
+            p1:find(['1','M1','PRECIO1']),p2:find(['2','M2','PRECIO2']),p3:find(['3','M3','PRECIO3'])
+          };
+          if([idx.p1,idx.p2,idx.p3].some(i=>i<0)) throw new Error('Faltan columnas de precios 1, 2 y 3 (M1, M2 y M3).');
+          const items=[],seen=new Set();
+          for(const row of matrix.slice(headerIndex+1)){
+            const code=normalizeStockCode(row[idx.code]);
+            if(!code||seen.has(code)) continue;
+            seen.add(code);
+            items.push({
+              code,
+              central:parseStockNumber(row[idx.central]),
+              cde:parseStockNumber(row[idx.cde]),
+              p1:parseStockNumber(row[idx.p1]),
+              p2:parseStockNumber(row[idx.p2]),
+              p3:parseStockNumber(row[idx.p3])
+            });
+          }
+          if(!items.length) throw new Error('El archivo no contiene artículos con código.');
+          const matched=items.filter(x=>byCode.has(x.code)).length;
+          resolve({items,matched,filename:file.name});
+        }catch(e){reject(e);}
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+  async function confirmSharedInventoryUpload() {
+    if(!user||!profile||profile.role!=='admin'||!pendingSharedInventory) return;
+    const btn=$('admin-inventory-confirm');
+    if(btn) btn.disabled=true;
+    try{
+      const payload={
+        id:1,items:pendingSharedInventory.items,
+        imported_at:new Date().toISOString(),imported_by:user.id
+      };
+      status('Subiendo '+payload.items.length.toLocaleString('es-PY')+' artículos a la nube...');
+      const {error}=await client.from('inventory_current').upsert(payload,{onConflict:'id'});
+      if(error) throw error;
+      await loadSharedInventory();
+      const msg='Actualización compartida completada: '+payload.items.length.toLocaleString('es-PY')+' filas del Excel; '+pendingSharedInventory.matched.toLocaleString('es-PY')+' coincidencias con el catálogo.';
+      pendingSharedInventory=null;
+      $('admin-inventory-preview').textContent=msg;
+      $('admin-inventory-confirm').style.display='none';
+      status(msg);
+      toastSafe(msg);
+    }catch(e){
+      const el=$('admin-inventory-preview');
+      if(el) el.textContent='No se pudo actualizar: '+(e.message||e);
+      status('Error al actualizar stock y precios: '+(e.message||e));
+    }finally{if(btn)btn.disabled=false;}
+  }
+  async function handleSharedInventoryFile(file) {
+    if(!file) return;
+    const preview=$('admin-inventory-preview');
+    if(preview) preview.textContent='Leyendo y validando '+file.name+'...';
+    $('admin-inventory-confirm').style.display='none';
+    try{
+      const parsed=await parseSharedInventoryFile(file);
+      pendingSharedInventory=parsed;
+      preview.textContent='Archivo: '+parsed.filename+' · '+parsed.items.length.toLocaleString('es-PY')+' filas válidas · '+parsed.matched.toLocaleString('es-PY')+' coincidencias con el catálogo. Al confirmar, reemplazará los datos compartidos actuales de stock Central, stock CDE y precios M1/M2/M3 para todos los usuarios.';
+      $('admin-inventory-confirm').style.display='';
+    }catch(e){
+      pendingSharedInventory=null;
+      preview.textContent='No se pudo validar el Excel: '+(e.message||e);
+    }
+  }
+
   function renderAdminPanel(){
     if(!adminContent||!profile||profile.role!=='admin')return;
     adminContent.innerHTML=`
@@ -265,11 +375,19 @@
       <section class="admin-section"><h3>Cambios de contraseña</h3><p class="admin-note">Enviá un enlace seguro de recuperación al correo registrado del vendedor. El cambio se completa desde ese enlace.</p>
         <div class="admin-user-form"><label>Correo del vendedor<input id="admin-recovery-email" type="email" placeholder="vendedor@correo.com"></label></div><div class="admin-actions"><button id="admin-recovery-btn">Enviar enlace de recuperación</button></div>
       </section>
+      <section class="admin-section"><h3>Actualizar stock y precios desde Excel</h3>
+        <p class="admin-note">Importación compartida para todos los usuarios. El Excel debe incluir Cód.Artículo, CENTRAL, CDE y las columnas de precios 1, 2 y 3 (M1, M2 y M3).</p>
+        <input type="file" id="admin-inventory-file" accept=".xlsx,.xls" style="width:100%;margin:6px 0">
+        <div class="admin-actions"><button id="admin-inventory-confirm" style="display:none">Confirmar y actualizar para todos</button></div>
+        <p id="admin-inventory-preview" class="admin-note" aria-live="polite">Elegí el Excel actualizado para validar sus filas antes de reemplazar los datos compartidos.</p>
+      </section>
       <section class="admin-section"><h3>Agregar usuarios vendedores</h3><p class="admin-note">Esta opción requiere configurar una función segura en Supabase. No es seguro incluir la clave de administración en la aplicación pública.</p><p class="admin-note"><strong>Pendiente:</strong> alta de nuevas cuentas y asignación inicial desde este menú. Las cuentas existentes siguen funcionando sin cambios.</p></section>`;
     ['admin-date-from','admin-date-to'].forEach(id=>$(id).addEventListener('change',renderAdminReport));$('admin-seller-filter').addEventListener('change',renderAdminReport);
     $('admin-export-report').addEventListener('click',exportAdminReport);
     $('admin-reset-filters').addEventListener('click',()=>{$('admin-date-from').value='';$('admin-date-to').value='';$('admin-seller-filter').querySelectorAll('input[type=checkbox]').forEach(o=>o.checked=false);renderAdminReport();});
     $('admin-recovery-btn').addEventListener('click',sendSellerRecovery);renderAdminReport();
+    $('admin-inventory-file').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];handleSharedInventoryFile(file);e.target.value='';});
+    $('admin-inventory-confirm').addEventListener('click',()=>{if(confirm('¿Reemplazar el stock y los tres niveles de precios compartidos para todos los usuarios?'))confirmSharedInventoryUpload();});
   }
 
   const recoveryLayer=document.createElement('div');
