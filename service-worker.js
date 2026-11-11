@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pedidos-koeju-v75';
+const CACHE_NAME = 'pedidos-koeju-v76';
 const ASSETS = [
   './',
   './index.html',
