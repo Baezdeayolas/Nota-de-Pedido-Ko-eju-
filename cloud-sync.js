@@ -199,12 +199,21 @@
   $('cloud-logout').addEventListener('click',logout);
   $('cloud-migrate').addEventListener('click',migrateLocal);
   installSaveHooks();
+  function clearUnauthenticatedView() {
+    archive=[]; historico=[];
+    renderArchive(); renderHistorico(); renderRankings();
+  }
+  // app.js carga primero el archivo local global. Ocultarlo inmediatamente:
+  // solo una sesión autenticada puede volver a cargar su caché correspondiente.
+  clearUnauthenticatedView();
   client.auth.getSession().then(async ({data,error})=>{
-    if(error){status('No se pudo recuperar la sesión: '+error.message);return;}
+    if(error){clearUnauthenticatedView();status('No se pudo recuperar la sesión: '+error.message);return;}
     if(data.session){
       status('Recuperando sesión...');
       try{await activateSession(data.session.user);}
-      catch(e){await client.auth.signOut();user=null;profile=null;assignments=[];status('Sesión cerrada: '+(e.message||e));}
+      catch(e){await client.auth.signOut();user=null;profile=null;assignments=[];clearUnauthenticatedView();status('Sesión cerrada: '+(e.message||e));}
+    } else {
+      clearUnauthenticatedView();
     }
   });
 })();
