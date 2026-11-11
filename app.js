@@ -165,23 +165,16 @@ function refreshStockGroupOptions() {
   const select = document.getElementById('stock-group-filter');
   if (!select) return;
   const previous = select.value;
-  const definitions = [
-    { key: 'group1', label: 'Agrup. 1' },
-    { key: 'group2', label: 'Agrup. 2' },
-    { key: 'group3', label: 'Agrup. 3' },
+  const options = [
+    '<option value="">Todas las Agrup.</option>',
+    '<option value="group1">Agrup. 1 y sus categorías</option>',
+    '<option value="group2">Agrup. 2 y sus categorías</option>',
+    '<option value="group3">Agrup. 3 y sus categorías</option>',
   ];
-  const options = ['<option value="">Todas las Agrup.</option>'];
-  definitions.forEach(({ key, label }) => {
-    const groups = [...new Set(stockSnapshot.map(x => String(x[key] || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'es'));
-    groups.forEach(group => {
-      const value = key + '::' + group;
-      options.push('<option value="' + escapeAttr(value) + '">' + label + ' — ' + escapeHtml(group) + '</option>');
-    });
-  });
   select.innerHTML = options.join('');
   if ([...select.options].some(option => option.value === previous)) select.value = previous;
-  select.disabled = options.length <= 1;
-  select.title = select.disabled ? 'No hay agrupaciones disponibles en la base de datos.' : 'Filtrar por Agrup. 1, Agrup. 2 o Agrup. 3';
+  select.disabled = !stockSnapshot.some(x => x.group1 || x.group2 || x.group3);
+  select.title = select.disabled ? 'No hay agrupaciones disponibles en la base de datos.' : 'Seleccioná una agrupación para ver sus categorías.';
 }
 
 function refreshStockSnapshotFromCatalog() {
@@ -204,8 +197,6 @@ function renderStockPanel() {
   const q = (document.getElementById('stock-search').value || '').trim().toLowerCase();
   const filter = document.getElementById('stock-filter').value;
   const groupSelection = document.getElementById('stock-group-filter').value;
-  const [groupKey, ...groupParts] = groupSelection ? groupSelection.split('::') : ['', ''];
-  const groupValue = groupParts.join('::');
   const lowCentral = stockSnapshot.filter(x => x.central < STOCK_LOW_LIMIT).length;
   const lowCde = stockSnapshot.filter(x => x.cde < STOCK_LOW_LIMIT).length;
   const zeroBoth = stockSnapshot.filter(x => x.central <= 0 && x.cde <= 0).length;
@@ -217,7 +208,7 @@ function renderStockPanel() {
     document.getElementById('stock-result-count').textContent = '';
     return;
   }
-  let rows = stockSnapshot.filter(x => (!q || x.code.toLowerCase().includes(q) || x.description.toLowerCase().includes(q)) && (!groupKey || String(x[groupKey] || '').trim() === groupValue));
+  let rows = stockSnapshot.filter(x => (!q || x.code.toLowerCase().includes(q) || x.description.toLowerCase().includes(q)) && (!groupSelection || String(x[groupSelection] || '').trim() !== ''));
   if (filter === 'low') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT || x.cde < STOCK_LOW_LIMIT);
   if (filter === 'zero') rows = rows.filter(x => x.central <= 0 && x.cde <= 0);
   if (filter === 'central') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT);
