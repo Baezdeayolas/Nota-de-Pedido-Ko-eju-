@@ -81,6 +81,7 @@
 
 <nav class="tabs">
   <button class="tab-btn active" data-panel="panel-search">Buscar</button>
+  <button class="tab-btn" data-panel="panel-dashboard">Resumen</button>
   <button class="tab-btn" data-panel="panel-order">Pedido <span class="count" id="tab-order-count">0</span></button>
   <button class="tab-btn" data-panel="panel-archive">Archivo <span class="count" id="tab-archive-count">0</span></button>
   <button class="tab-btn" data-panel="panel-stock">Stock</button>
@@ -88,6 +89,20 @@
 </nav>
 
 <main>
+  <section id="panel-dashboard" class="panel">
+    <div class="dashboard-head">
+      <div><h2>Resumen del día</h2><p id="dashboard-date">Actividad de hoy</p></div>
+      <button type="button" class="btn-outline btn-sm" id="dashboard-refresh">Actualizar</button>
+    </div>
+    <div class="dashboard-grid">
+      <article class="dashboard-card"><span>Pedidos del día</span><strong id="dashboard-orders">0</strong><small>Pedidos registrados hoy</small></article>
+      <article class="dashboard-card"><span>Productos vendidos</span><strong id="dashboard-units">0</strong><small>Unidades en pedidos de hoy</small></article>
+      <article class="dashboard-card"><span>Total de ventas</span><strong id="dashboard-sales">Gs. 0</strong><small>Importe de pedidos de hoy</small></article>
+      <article class="dashboard-card"><span>Pedidos pendientes</span><strong id="dashboard-pending">0</strong><small>Pedidos de hoy sin confirmar</small></article>
+    </div>
+    <div class="dashboard-note" id="dashboard-scope">Los datos se actualizan con los pedidos sincronizados de tu cuenta.</div>
+  </section>
+
   <section id="panel-search" class="panel active">
     <div class="search-wrap">
       <div class="search-input-row">
