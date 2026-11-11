@@ -162,20 +162,26 @@ function parseStockNumber(value) {
 }
 
 function refreshStockGroupOptions() {
-  [
-    { id: 'stock-group1-filter', key: 'group1', label: 'Agrup. 1' },
-    { id: 'stock-group2-filter', key: 'group2', label: 'Agrup. 2' },
-    { id: 'stock-group3-filter', key: 'group3', label: 'Agrup. 3' },
-  ].forEach(({ id, key, label }) => {
-    const select = document.getElementById(id);
-    if (!select) return;
-    const previous = select.value;
+  const select = document.getElementById('stock-group-filter');
+  if (!select) return;
+  const previous = select.value;
+  const definitions = [
+    { key: 'group1', label: 'Agrup. 1' },
+    { key: 'group2', label: 'Agrup. 2' },
+    { key: 'group3', label: 'Agrup. 3' },
+  ];
+  const options = ['<option value="">Todas las Agrup.</option>'];
+  definitions.forEach(({ key, label }) => {
     const groups = [...new Set(stockSnapshot.map(x => String(x[key] || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'es'));
-    select.innerHTML = '<option value="">Todas (' + label + ')</option>' + groups.map(g => '<option value="' + escapeAttr(g) + '">' + escapeHtml(g) + '</option>').join('');
-    if (groups.includes(previous)) select.value = previous;
-    select.disabled = groups.length === 0;
-    select.title = groups.length ? 'Filtrar por ' + label : 'No hay agrupaciones disponibles en la base de datos.';
+    groups.forEach(group => {
+      const value = key + '::' + group;
+      options.push('<option value="' + escapeAttr(value) + '">' + label + ' — ' + escapeHtml(group) + '</option>');
+    });
   });
+  select.innerHTML = options.join('');
+  if ([...select.options].some(option => option.value === previous)) select.value = previous;
+  select.disabled = options.length <= 1;
+  select.title = select.disabled ? 'No hay agrupaciones disponibles en la base de datos.' : 'Filtrar por Agrup. 1, Agrup. 2 o Agrup. 3';
 }
 
 function refreshStockSnapshotFromCatalog() {
@@ -197,9 +203,9 @@ function renderStockPanel() {
   if (!list) return;
   const q = (document.getElementById('stock-search').value || '').trim().toLowerCase();
   const filter = document.getElementById('stock-filter').value;
-  const group1 = document.getElementById('stock-group1-filter').value;
-  const group2 = document.getElementById('stock-group2-filter').value;
-  const group3 = document.getElementById('stock-group3-filter').value;
+  const groupSelection = document.getElementById('stock-group-filter').value;
+  const [groupKey, ...groupParts] = groupSelection ? groupSelection.split('::') : ['', ''];
+  const groupValue = groupParts.join('::');
   const lowCentral = stockSnapshot.filter(x => x.central < STOCK_LOW_LIMIT).length;
   const lowCde = stockSnapshot.filter(x => x.cde < STOCK_LOW_LIMIT).length;
   const zeroBoth = stockSnapshot.filter(x => x.central <= 0 && x.cde <= 0).length;
@@ -211,7 +217,7 @@ function renderStockPanel() {
     document.getElementById('stock-result-count').textContent = '';
     return;
   }
-  let rows = stockSnapshot.filter(x => (!q || x.code.toLowerCase().includes(q) || x.description.toLowerCase().includes(q)) && (!group1 || x.group1 === group1) && (!group2 || x.group2 === group2) && (!group3 || x.group3 === group3));
+  let rows = stockSnapshot.filter(x => (!q || x.code.toLowerCase().includes(q) || x.description.toLowerCase().includes(q)) && (!groupKey || String(x[groupKey] || '').trim() === groupValue));
   if (filter === 'low') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT || x.cde < STOCK_LOW_LIMIT);
   if (filter === 'zero') rows = rows.filter(x => x.central <= 0 && x.cde <= 0);
   if (filter === 'central') rows = rows.filter(x => x.central < STOCK_LOW_LIMIT);
@@ -592,7 +598,7 @@ tabButtons.forEach((btn) => {
 // ---------- Eventos del inventario ----------
 document.getElementById('stock-search').addEventListener('input', renderStockPanel);
 document.getElementById('stock-filter').addEventListener('change', renderStockPanel);
-['stock-group1-filter', 'stock-group2-filter', 'stock-group3-filter'].forEach(id => document.getElementById(id).addEventListener('change', renderStockPanel));
+document.getElementById('stock-group-filter').addEventListener('change', renderStockPanel);
 
 // ---------- Selector de precio (global) ----------
 const tierButtons = document.querySelectorAll('.tier-btn');
