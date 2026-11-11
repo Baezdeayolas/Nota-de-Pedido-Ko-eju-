@@ -1024,3 +1024,9 @@ main {
 .dashboard-card small{display:block;font-size:11px;color:#7a847e;line-height:1.35}
 .dashboard-note{margin-top:12px;padding:11px 12px;background:rgba(32,48,43,.06);border-radius:9px;color:#65716a;font-size:12px;line-height:1.45}
 @media(min-width:700px){.dashboard-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* Estadísticas comparativas de vendedores */
+.admin-seller-stat{align-items:center;gap:12px}
+.admin-seller-stat>span{min-width:0;line-height:1.4}
+.admin-seller-stat>strong{white-space:nowrap;text-align:right}
+@media(max-width:420px){.admin-seller-stat{align-items:flex-start}.admin-seller-stat>strong{font-size:12px}}
