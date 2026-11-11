@@ -231,14 +231,19 @@
   $('cloud-migrate').addEventListener('click',migrateLocal);
 
   const adminTab=$('admin-menu-tab'), adminContent=$('admin-panel-content');
-  function adminDate(e){return new Date(e.updatedAt||e.createdAt||0);}
+  function adminDate(e){return new Date(e.createdAt||e.updatedAt||0);}
   function adminFiltered(){const from=$('admin-date-from').value,to=$('admin-date-to').value,sellers=Array.from(document.querySelectorAll('#admin-seller-filter input[type=checkbox]:checked')).map(o=>o.value);return archive.concat(historico).filter(e=>{const d=adminDate(e);return (!from||d>=new Date(from+'T00:00:00'))&&(!to||d<=new Date(to+'T23:59:59.999'))&&(!sellers.length||sellers.includes(e.vendedor));});}
   function renderAdminReport(){
     if(!user||!profile||profile.role!=='admin')return;
     const orders=adminFiltered(), total=orders.reduce((n,e)=>n+archiveOrderTotal(e),0), groups=new Map();
-    orders.forEach(e=>{const k=e.vendedor||'Sin vendedor',v=groups.get(k)||{count:0,total:0};v.count++;v.total+=archiveOrderTotal(e);groups.set(k,v);});
-    $('admin-total-orders').textContent=orders.length;$('admin-total-sales').textContent='Gs. '+fmtMoney(total);$('admin-seller-count').textContent=groups.size;
-    $('admin-report-list').innerHTML=[...groups.entries()].sort((a,b)=>b[1].total-a[1].total).map(([name,v])=>'<div class="admin-report-row"><span>'+escapeHtml(name)+'<br><small>'+v.count+' pedido(s)</small></span><strong>Gs. '+fmtMoney(v.total)+'</strong></div>').join('')||'<p class="admin-note">No hay pedidos para el período seleccionado.</p>';
+    const unitsOf=e=>(e.lines||[]).reduce((n,l)=>n+Math.max(0,Number(l.qty)||0),0);
+    const units=orders.reduce((n,e)=>n+unitsOf(e),0);
+    orders.forEach(e=>{const k=e.vendedor||'Sin vendedor',v=groups.get(k)||{count:0,total:0,units:0};v.count++;v.total+=archiveOrderTotal(e);v.units+=unitsOf(e);groups.set(k,v);});
+    $('admin-total-orders').textContent=orders.length.toLocaleString('es-PY');
+    $('admin-total-units').textContent=units.toLocaleString('es-PY');
+    $('admin-total-sales').textContent='Gs. '+fmtMoney(total);
+    $('admin-seller-count').textContent=groups.size.toLocaleString('es-PY');
+    $('admin-report-list').innerHTML=[...groups.entries()].sort((a,b)=>b[1].total-a[1].total).map(([name,v])=>'<div class="admin-report-row admin-seller-stat"><span>'+escapeHtml(name)+'<br><small>'+v.count.toLocaleString('es-PY')+' pedidos · '+v.units.toLocaleString('es-PY')+' unidades</small></span><strong>Gs. '+fmtMoney(v.total)+'</strong></div>').join('')||'<p class="admin-note">No hay pedidos para el período seleccionado.</p>';
   }
   function exportAdminReport(){
     const orders=adminFiltered();if(!orders.length){toastSafe('No hay ventas para exportar con esos filtros.');return;}
@@ -369,10 +374,10 @@
       <section class="admin-section"><h3>Resumen de ventas por vendedor</h3>
         <div class="admin-filters"><label>Desde<input type="date" id="admin-date-from"></label><label>Hasta<input type="date" id="admin-date-to"></label>
         <div class="wide"><strong>Vendedores</strong><small style="display:block;margin:4px 0 8px">Marcá todos los vendedores que quieras incluir:</small><div id="admin-seller-filter" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;padding:10px;border:1px solid #bbb;border-radius:8px;background:#fff">${labelOptions.map(v=>'<label style="display:flex;align-items:center;gap:8px;padding:6px;min-height:38px"><input type="checkbox" value="'+escapeAttr(v)+'" style="width:18px;height:18px;flex:0 0 auto"> <span>'+escapeHtml(v)+'</span></label>').join('')}</div><small>Sin marcar ninguno se muestran todos.</small></div></div>
-        <div class="admin-metrics"><div class="admin-metric"><span>Pedidos</span><strong id="admin-total-orders">0</strong></div><div class="admin-metric"><span>Total vendido</span><strong id="admin-total-sales">Gs. 0</strong></div></div>
+        <div class="admin-metrics"><div class="admin-metric"><span>Pedidos</span><strong id="admin-total-orders">0</strong></div><div class="admin-metric"><span>Unidades vendidas</span><strong id="admin-total-units">0</strong></div><div class="admin-metric"><span>Total vendido</span><strong id="admin-total-sales">Gs. 0</strong></div></div>
         <div class="admin-report-row"><span>Vendedores con ventas</span><strong id="admin-seller-count">0</strong></div><div id="admin-report-list"></div>
         <div class="admin-actions"><button id="admin-export-report">Exportar resumen CSV</button><button class="secondary" id="admin-reset-filters">Limpiar filtros</button></div>
-        <p class="admin-note">Incluye pedidos del Archivo y del Histórico disponibles en la cuenta administradora.</p>
+        <p class="admin-note">Comparación por vendedor según el período elegido. Incluye pedidos del Archivo y del Histórico disponibles en la cuenta administradora; las unidades se calculan sumando las cantidades de sus artículos.</p>
       </section>
       <section class="admin-section"><h3>Cambios de contraseña</h3><p class="admin-note">Enviá un enlace seguro de recuperación al correo registrado del vendedor. El cambio se completa desde ese enlace.</p>
         <div class="admin-user-form"><label>Correo del vendedor<input id="admin-recovery-email" type="email" placeholder="vendedor@correo.com"></label></div><div class="admin-actions"><button id="admin-recovery-btn">Enviar enlace de recuperación</button></div>
