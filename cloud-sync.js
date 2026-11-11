@@ -114,6 +114,24 @@
     }catch(e){status('No se completó la migración: '+e.message);}
     finally{$('cloud-migrate').disabled=false;}
   }
+  async function activateSession(sessionUser) {
+    user=sessionUser;
+    const {data:p,error:pe}=await client.from('profiles').select('role,seller_label').eq('id',user.id).single();
+    if(pe) throw pe;
+    profile=p;
+    const {data:as,error:ae}=await client.from('seller_assignments').select('seller_label').eq('user_id',user.id);
+    if(ae && profile.role!=='admin') throw ae;
+    assignments=(as||[]).map(x=>x.seller_label);
+    if(profile.role==='seller' && !assignments.length) throw new Error('Esta cuenta no tiene vendedores asignados.');
+    if(profile.role!=='admin' && profile.role!=='seller') throw new Error('El perfil no tiene un rol autorizado.');
+    applySellerPermissions();
+    await loadCloudOrders();
+    $('cloud-email').style.display='none'; $('cloud-password').style.display='none';
+    $('cloud-login').style.display='none'; $('cloud-logout').style.display='';
+    $('cloud-migrate').style.display=profile.role==='admin'?'':'none';
+    status('Conectado: '+(profile.role==='admin'?'Administrador':assignments.join(', '))+' · sincronización activa');
+    $('cloud-password').value='';
+  }
   async function login() {
     const email=$('cloud-email').value.trim(), password=$('cloud-password').value;
     if(!email || !password){status('Ingresá correo y contraseña.');return;}
@@ -121,26 +139,16 @@
     try{
       const {data,error}=await client.auth.signInWithPassword({email,password});
       if(error) throw error;
-      user=data.user;
-      const {data:p,error:pe}=await client.from('profiles').select('role,seller_label').eq('id',user.id).single();
-      if(pe) throw pe;
-      profile=p;
-      const {data:as,error:ae}=await client.from('seller_assignments').select('seller_label').eq('user_id',user.id);
-      if(ae && profile.role!=='admin') throw ae;
-      assignments=(as||[]).map(x=>x.seller_label);
-      if(profile.role==='seller' && !assignments.length) throw new Error('Esta cuenta no tiene vendedores asignados.');
-      applySellerPermissions();
-      await loadCloudOrders();
-      $('cloud-email').style.display='none'; $('cloud-password').style.display='none';
-      $('cloud-login').style.display='none'; $('cloud-logout').style.display='';
-      $('cloud-migrate').style.display=profile.role==='admin'?'':'none';
-      status('Conectado: '+(profile.role==='admin'?'Administrador':assignments.join(', '))+' · sincronización activa');
-      $('cloud-password').value='';
-    }catch(e){await client.auth.signOut();user=null;profile=null;status('No se pudo ingresar: '+e.message);}
-    finally{$('cloud-login').disabled=false;}
+      await activateSession(data.user);
+    }catch(e){
+      await client.auth.signOut(); user=null;profile=null;assignments=[];
+      status('No se pudo ingresar: '+(e.message||e));
+    }finally{$('cloud-login').disabled=false;}
   }
   async function logout() {
-    await client.auth.signOut(); user=null;profile=null;assignments=[];
+    await client.auth.signOut(); user=null;profile=null;assignments=[];owners.clear();
+    const select=$('vendedor-input');
+    select.innerHTML='<option value="">Vendedor</option>'+labelOptions.map(v=>'<option value="'+String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+v+'</option>').join('');
     $('cloud-email').style.display='';$('cloud-password').style.display='';
     $('cloud-login').style.display='';$('cloud-logout').style.display='none';$('cloud-migrate').style.display='none';
     status('Sesión cerrada. Los datos guardados en este dispositivo permanecen.');
@@ -149,7 +157,12 @@
   $('cloud-logout').addEventListener('click',logout);
   $('cloud-migrate').addEventListener('click',migrateLocal);
   installSaveHooks();
-  client.auth.getSession().then(async ({data})=>{
-    if(data.session){user=data.session.user;$('cloud-email').value=user.email||'';status('Sesión encontrada. Volvé a ingresar para validar el perfil.');}
+  client.auth.getSession().then(async ({data,error})=>{
+    if(error){status('No se pudo recuperar la sesión: '+error.message);return;}
+    if(data.session){
+      status('Recuperando sesión...');
+      try{await activateSession(data.session.user);}
+      catch(e){await client.auth.signOut();user=null;profile=null;assignments=[];status('Sesión cerrada: '+(e.message||e));}
+    }
   });
 })();
