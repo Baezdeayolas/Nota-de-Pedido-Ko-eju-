@@ -126,10 +126,8 @@
   <section id="panel-stock" class="panel">
     <div class="stock-import-head">
       <div><h2>Control de stock</h2><p>Existencias importadas desde Lotus</p></div>
-      <div class="stock-head-actions"><button type="button" class="btn-outline btn-sm" id="btn-import-stock">Importar Excel</button><button type="button" class="btn-outline btn-sm" id="btn-export-stock">Exportar reposición</button></div>
-      <input type="file" id="stock-file-input" accept=".xlsx,.xls" hidden>
     </div>
-    <div class="stock-updated" id="stock-updated">Todavía no se importó ningún archivo de Lotus.</div>
+    <div class="stock-updated" id="stock-updated">Existencias obtenidas de la base de datos principal.</div>
     <div class="stock-summary-grid">
       <div class="stock-summary-card"><span>Central con menos de 10</span><strong id="stock-low-central">—</strong></div>
       <div class="stock-summary-card"><span>CDE con menos de 10</span><strong id="stock-low-cde">—</strong></div>
@@ -143,18 +141,12 @@
       <select id="stock-filter"><option value="all">Todos los productos</option><option value="low">Con stock bajo (&lt;10)</option><option value="zero">Agotados en ambos</option><option value="central">Stock bajo en Central</option><option value="cde">Stock bajo en CDE</option></select>
     </div>
     <div class="stock-result-count" id="stock-result-count"></div>
-    <div class="stock-list" id="stock-list"><div class="empty-state"><div class="big">Importá el Excel de Lotus</div><div>Acá aparecerán las existencias de Central y CDE.</div></div></div>
+    <div class="stock-list" id="stock-list"><div class="empty-state"><div class="big">No hay datos de stock disponibles</div><div>Las existencias aparecerán cuando la base de datos principal esté sincronizada.</div></div></div>
   </section>
 
   <section id="panel-archive" class="panel">
     <div class="search-wrap">
       <input id="archive-search-input" type="text" inputmode="search" placeholder="Buscar cliente en archivo e histórico..." autocomplete="off">
-    </div>
-    <div class="backup-row">
-      <button class="btn-outline btn-sm" id="btn-exportar-csv">Exportar a Excel</button>
-      <button class="btn-outline btn-sm" id="btn-exportar-respaldo">Exportar respaldo</button>
-      <button class="btn-outline btn-sm" id="btn-restaurar-respaldo">Restaurar respaldo</button>
-      <input type="file" id="input-restaurar-respaldo" accept="application/json" style="display:none;">
     </div>
     <div class="archive-summary" id="archive-summary" style="display:none;">
       <div class="archive-summary-text">
