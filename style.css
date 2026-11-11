@@ -1,12 +1,12 @@
 :root {
-  --ink: #20302B;
-  --ink-soft: #34443D;
-  --paper: #EAE3D3;
-  --paper-dim: #DCD3BC;
-  --rust: #B9622B;
-  --rust-dark: #96501F;
-  --gold: #C99A3C;
-  --green: #3F6B4A;
+  --ink: #203B35;
+  --ink-soft: #36564D;
+  --paper: #EDF3F0;
+  --paper-dim: #D8E6DF;
+  --rust: #356D9A;
+  --rust-dark: #28577F;
+  --gold: #78BFE3;
+  --green: #6F9282;
   --red: #A13D3D;
   --line: rgba(32, 48, 43, 0.14);
   --font-display: 'Space Grotesk', sans-serif;
