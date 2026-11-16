@@ -79,14 +79,7 @@
   <input id="condicion-input" type="text" class="condicion-input" placeholder="Escribir...">
 </div>
 
-<nav class="tabs">
-  <button class="tab-btn active" data-panel="panel-search">Buscar</button>
-  <button class="tab-btn" data-panel="panel-dashboard">Resumen</button>
-  <button class="tab-btn" data-panel="panel-order">Pedido <span class="count" id="tab-order-count">0</span></button>
-  <button class="tab-btn" data-panel="panel-archive">Archivo <span class="count" id="tab-archive-count">0</span></button>
-  <button class="tab-btn" data-panel="panel-stock">Stock</button>
-  <button class="tab-btn" data-panel="panel-admin" id="admin-menu-tab" style="display:none;">Administración</button>
-</nav>
+
 
 <main>
   <section id="panel-dashboard" class="panel">
@@ -208,6 +201,15 @@
     </div>
   </section>
 </main>
+
+<nav class="tabs" aria-label="Navegación principal">
+  <button class="tab-btn active" data-panel="panel-search" aria-label="Buscar"><span class="tab-icon">⌕</span><span class="tab-label">Buscar</span></button>
+  <button class="tab-btn" data-panel="panel-dashboard" aria-label="Resumen"><span class="tab-icon">▦</span><span class="tab-label">Resumen</span></button>
+  <button class="tab-btn" data-panel="panel-order" aria-label="Pedido"><span class="tab-icon">＋</span><span class="tab-label">Pedido</span><span class="count" id="tab-order-count">0</span></button>
+  <button class="tab-btn" data-panel="panel-archive" aria-label="Archivo"><span class="tab-icon">▤</span><span class="tab-label">Archivo</span><span class="count" id="tab-archive-count">0</span></button>
+  <button class="tab-btn" data-panel="panel-stock" aria-label="Stock"><span class="tab-icon">▥</span><span class="tab-label">Stock</span></button>
+  <button class="tab-btn" data-panel="panel-admin" id="admin-menu-tab" aria-label="Administración" style="display:none;"><span class="tab-icon">⚙</span><span class="tab-label">Admin</span></button>
+</nav>
 
 <footer class="footer">
   <div class="total-block">
