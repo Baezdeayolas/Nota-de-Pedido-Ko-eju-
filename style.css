@@ -1129,3 +1129,74 @@ main { order: 5; min-height: 0; padding-bottom: 8px; }
   .item-list { max-width: 900px; margin: 0 auto; }
   .search-wrap { max-width: 900px; margin: 0 auto; }
 }
+
+
+/* Pulido de tarjetas: precio, stock y acciones táctiles */
+.item-price {
+  color: var(--rust-dark);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -.025em;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.qty-input {
+  width: 48px;
+  min-width: 48px;
+  min-height: 36px;
+  padding: 5px 4px;
+  border: 1px solid rgba(32,59,53,.18);
+  border-radius: 9px;
+  background: #F7FAF8;
+  color: var(--ink);
+  font: 700 13px var(--font-body);
+  text-align: center;
+}
+.add-btn {
+  min-height: 36px;
+  padding: 7px 11px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--rust);
+  color: #fff;
+  font: 700 12px var(--font-body);
+  box-shadow: 0 2px 5px rgba(36,92,77,.16);
+}
+.add-btn:active { background: var(--rust-dark); transform: translateY(1px); }
+.stock-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 19px;
+  background: #E8F2ED;
+  color: #315F4F;
+  font-weight: 700;
+  line-height: 1;
+}
+.stock-badge.low {
+  background: #FFF1D9;
+  color: #8A5B16;
+}
+.result-count {
+  min-height: 22px;
+  font-weight: 600;
+}
+@media (max-width: 380px) {
+  .item-card { padding: 7px 8px; }
+  .item-price { font-size: 14px; }
+  .qty-input { width: 43px; min-width: 43px; }
+  .add-btn { padding-left: 9px; padding-right: 9px; }
+}
+@media (hover: hover) {
+  .item-card { transition: border-color .15s ease, box-shadow .15s ease; }
+  .item-card:hover {
+    border-color: rgba(47,117,97,.28);
+    box-shadow: 0 4px 12px rgba(25,55,44,.07);
+  }
+  .add-btn:hover { background: var(--rust-dark); }
+}
