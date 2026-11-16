@@ -1587,3 +1587,176 @@ main { order: 5; min-height: 0; padding-bottom: 8px; }
   .tabs { justify-content: center; gap: 8px; }
   .tab-btn { flex: 0 1 110px; }
 }
+
+
+
+/* ---------- Tema Ko'eju: azul marino, crema y menta ---------- */
+/* Los nombres existentes se conservan para no afectar la lógica ni los componentes. */
+:root {
+  --color-header-bg: #13315C;
+  --color-header-gradient: linear-gradient(180deg, #13315C 0%, #1D4E89 100%);
+  --color-header-text: #FFFFFF;
+  --color-header-subtext: #93C5FD;
+  --color-main-bg: #FAF6EE;
+  --color-filter-bg: #E3F2FD;
+  --color-input-bg: #F5F2EB;
+  --color-nav-bg: #FFFFFF;
+  --color-nav-active-bg: #E0F2FE;
+  --color-primary-mint: #1FB584;
+  --color-primary-cyan: #2196F3;
+  --color-unselected-bg: #D5E8F7;
+  --text-main: #1E293B;
+  --text-label: #3B6998;
+  --text-placeholder: #7C8798;
+  --border-subtle: #CBD5E1;
+  --badge-pedido: #EAB308;
+  --badge-archivo: #E11D48;
+
+  --ink: var(--text-main);
+  --ink-soft: var(--text-label);
+  --paper: var(--color-main-bg);
+  --paper-dim: var(--color-filter-bg);
+  --rust: var(--color-primary-mint);
+  --rust-dark: #13315C;
+  --gold: var(--color-header-subtext);
+  --green: var(--color-primary-mint);
+  --red: var(--badge-archivo);
+  --line: var(--border-subtle);
+}
+
+/* Encabezado, campos superiores y total inferior */
+.topbar,
+.footer {
+  background: var(--color-header-gradient);
+  color: var(--color-header-text);
+}
+.topbar-title span,
+.total-block .total-label {
+  color: var(--color-header-subtext);
+}
+.meta-fields input,
+.meta-fields select,
+.nuevo-cliente-panel input {
+  background-color: #244B78;
+  color: #FFFFFF;
+  border-color: rgba(255,255,255,.22);
+}
+.meta-fields input::placeholder,
+.nuevo-cliente-panel input::placeholder {
+  color: #C7DDF5;
+}
+
+/* Filtros de precio, estado y condición */
+.precio-estado-row,
+.tier-row,
+.condicion-row {
+  background-color: var(--color-filter-bg);
+  border-color: #C5E1F9;
+}
+.tier-row .tier-label {
+  color: var(--text-label);
+  font-weight: 700;
+}
+.tier-btn {
+  background: var(--color-unselected-bg);
+  border: 1px solid #BBD9F2;
+  color: #1E3A5F;
+}
+.tier-btn.active {
+  background: var(--color-primary-mint);
+  border-color: var(--color-primary-mint);
+  color: #FFFFFF;
+  box-shadow: 0 3px 8px rgba(31,181,132,.22);
+}
+.condicion-input,
+.search-wrap input,
+.search-filters select,
+.qty-input,
+.stock-controls input,
+.stock-controls select,
+#vendedor-input, #cliente-input,
+#ruc-input, #direccion-input, #telefono-input,
+#condicion-input, #stock-search, #stock-group-filter, #stock-filter,
+#archive-search-input {
+  background-color: var(--color-input-bg);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-placeholder);
+}
+.search-wrap {
+  background: var(--color-main-bg);
+}
+.search-filters select {
+  background-color: var(--color-input-bg);
+}
+
+/* Área principal y tarjetas */
+html, body,
+main,
+.bg-main {
+  background-color: var(--color-main-bg);
+  color: var(--text-main);
+}
+.item-card,
+.order-card,
+.dashboard-card,
+.stock-summary-card {
+  border-color: var(--border-subtle);
+}
+.item-price,
+.item-desc,
+.order-card {
+  color: var(--text-main);
+}
+.item-code {
+  color: var(--rust-dark);
+}
+.stock-badge {
+  background: var(--color-unselected-bg);
+}
+
+/* Acciones principales */
+.btn-primary,
+#btn-pdf {
+  background: var(--color-primary-cyan);
+  color: #FFFFFF;
+  box-shadow: 0 3px 8px rgba(33,150,243,.25);
+}
+.btn-ghost,
+#btn-clear {
+  color: #FFFFFF;
+  border-color: rgba(255,255,255,.45);
+}
+.add-btn {
+  background: var(--color-primary-mint);
+  color: #FFFFFF;
+}
+.add-btn:active {
+  background: #15966C;
+}
+
+/* Navegación inferior */
+.tabs {
+  background: var(--color-nav-bg);
+  border-top: 1px solid var(--border-subtle);
+}
+.tab-btn {
+  color: var(--text-label);
+}
+.tab-btn.active {
+  color: #13315C;
+  background: var(--color-nav-active-bg);
+  border-top-color: var(--color-primary-mint);
+  border-bottom-color: transparent;
+}
+.tab-btn[data-panel="panel-order"] .count {
+  background: var(--badge-pedido);
+  color: #FFFFFF;
+}
+.tab-btn[data-panel="panel-archive"] .count {
+  background: var(--badge-archivo);
+  color: #FFFFFF;
+}
