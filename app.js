@@ -140,8 +140,10 @@ function syncArchiveFromDraft() {
 }
 
 // ---------- Índice de búsqueda ----------
+let activeItems = ITEMS;
+let activeClients = (typeof CLIENTES !== 'undefined' ? CLIENTES : []);
 const byCode = new Map();
-ITEMS.forEach((it) => byCode.set(it.c, it));
+activeItems.forEach((it) => byCode.set(it.c, it));
 
 // ---------- Inventario importado desde Lotus ----------
 const STOCK_LOW_LIMIT = 10;
@@ -179,7 +181,7 @@ function refreshStockGroupOptions() {
 }
 
 function refreshStockSnapshotFromCatalog() {
-  stockSnapshot = ITEMS.map(item => ({
+  stockSnapshot = activeItems.map(item => ({
     code: String(item.c || ''),
     description: String(item.d || ''),
     group1: String(item.g1 || ''),
@@ -234,8 +236,8 @@ function search(query) {
   const q = query.trim().toLowerCase();
   if (!q) return [];
   const results = [];
-  for (let i = 0; i < ITEMS.length; i++) {
-    const it = ITEMS[i];
+  for (let i = 0; i < activeItems.length; i++) {
+    const it = activeItems[i];
     if (
       it.c.toLowerCase().includes(q) ||
       (it.b && it.b.toLowerCase().includes(q)) ||
@@ -250,14 +252,14 @@ function search(query) {
 
 // ---------- Índice de clientes ----------
 const clienteByCodigo = new Map();
-(typeof CLIENTES !== 'undefined' ? CLIENTES : []).forEach((cl) => clienteByCodigo.set(cl.c, cl));
+activeClients.forEach((cl) => clienteByCodigo.set(cl.c, cl));
 
 function searchClientes(query) {
   const q = query.trim().toLowerCase();
-  if (!q || typeof CLIENTES === 'undefined') return [];
+  if (!q) return [];
   const results = [];
-  for (let i = 0; i < CLIENTES.length; i++) {
-    const cl = CLIENTES[i];
+  for (let i = 0; i < activeClients.length; i++) {
+    const cl = activeClients[i];
     if (cl.c.toLowerCase().includes(q) || cl.n.toLowerCase().includes(q)) {
       results.push(cl);
       if (results.length >= 15) break;
@@ -1823,3 +1825,22 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./service-worker.js').catch(() => {});
   });
 }
+
+
+// Permite aplicar catálogos compartidos descargados desde Supabase sin recargar la página.
+window.KOEJU_SET_MASTER_DATA = function(items, clients) {
+  if (Array.isArray(items) && items.length) {
+    activeItems = items;
+    byCode.clear();
+    activeItems.forEach(item => { if (item && item.c) byCode.set(String(item.c), item); });
+  }
+  if (Array.isArray(clients) && clients.length) {
+    activeClients = clients;
+    clienteByCodigo.clear();
+    activeClients.forEach(cl => { if (cl && cl.c) clienteByCodigo.set(String(cl.c), cl); });
+  }
+  refreshStockSnapshotFromCatalog();
+  renderResults();
+  renderStockPanel();
+  clienteInput.dispatchEvent(new Event('input', { bubbles: true }));
+};
