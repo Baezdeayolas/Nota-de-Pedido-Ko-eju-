@@ -12,13 +12,16 @@
   const labelOptions = Array.from($('vendedor-input').options).map(o => o.value).filter(Boolean);
   const css = document.createElement('style');
   css.textContent = `
-    .cloud-bar{padding:8px 12px;background:#36564D;color:#EDF3F0;font:13px sans-serif;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .cloud-bar{padding:2px 5px;background:transparent;color:#FFFFFF;font:10px sans-serif;display:flex;gap:4px;align-items:center;flex:0 1 auto;min-width:0;white-space:nowrap}
     .cloud-bar input{min-width:0;flex:1;padding:8px;border-radius:6px;border:1px solid #aaa}
     .cloud-bar button{padding:8px 10px;border-radius:6px;background:#78BFE3;color:#203B35;font-weight:700}
-    .cloud-status{font-size:12px;opacity:.98;flex:1 1 calc(100% - 24px);line-height:1.4}
-    .cloud-status-dot{width:10px;height:10px;border-radius:50%;background:#78BFE3;flex:0 0 10px;box-shadow:0 0 0 3px rgba(255,255,255,.12)}
+    .cloud-status{font-size:10px;opacity:.98;line-height:1.2;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .cloud-status-dot{width:7px;height:7px;border-radius:50%;background:#78BFE3;flex:0 0 7px;box-shadow:0 0 0 2px rgba(255,255,255,.12)}
     .cloud-status-dot.connected{background:#72D69A}.cloud-status-dot.error,.cloud-status-dot.offline{background:#FF7777}
-    .cloud-last-sync{flex-basis:100%;font-size:11px;color:#E2C47E;padding-left:18px;line-height:1.35}
+    .cloud-last-sync{flex:0 1 auto;font-size:9px;color:#C7DDF5;padding:0;line-height:1.2;white-space:nowrap}
+    .topbar-title{align-items:center;gap:5px}
+    .topbar-title .cloud-bar{margin-left:auto}
+    @media(max-width:390px){.topbar-title{gap:3px}.topbar-title h1{font-size:18px}.topbar-title .topbar-brand>span{font-size:10px}.cloud-bar{gap:3px;padding:2px}.cloud-status{font-size:9px}.cloud-last-sync{font-size:8px}}
     .admin-panel-content{padding:14px 12px 100px}.admin-heading{margin:2px 2px 12px}.admin-heading h2{margin:0;font-size:21px}.admin-heading p,.admin-note{color:#65716a;font-size:12px;line-height:1.5}
     .admin-section{background:#fff;border:1px solid #d8ddd7;border-radius:12px;padding:13px;margin:10px 0}.admin-section h3{margin:0 0 10px;font-size:16px}
     .admin-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}.admin-filters label,.admin-user-form label{display:block;font-size:12px;color:#526057}
@@ -43,7 +46,7 @@
   const bar = document.createElement('section');
   bar.className = 'cloud-bar';
   bar.innerHTML = '<span id="cloud-status-dot" class="cloud-status-dot" aria-hidden="true"></span><span id="cloud-status" class="cloud-status" role="status" aria-live="polite">Verificando conexión...</span><span id="cloud-last-sync" class="cloud-last-sync">Última sincronización: todavía no registrada</span>';
-  document.querySelector('.topbar').appendChild(bar);
+  document.querySelector('.topbar-title').insertBefore(bar, document.querySelector('.topbar-brand'));
   let lastSyncAt = null;
   const syncStampKey = () => user ? 'koeju_last_sync_user_'+user.id : '';
   const formatSyncTime = value => value ? new Date(value).toLocaleString('es-PY',{dateStyle:'short',timeStyle:'short'}) : 'todavía no registrada';
@@ -54,7 +57,12 @@
   function updateLastSync(value){
     lastSyncAt=value||null;
     const el=$('cloud-last-sync');
-    if(el) el.textContent='Última sincronización: '+formatSyncTime(lastSyncAt);
+    if(el){
+      const compact=lastSyncAt?new Date(lastSyncAt).toLocaleString('es-PY',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'pendiente';
+      el.textContent='Sync '+compact;
+      el.title='Última sincronización: '+formatSyncTime(lastSyncAt);
+      el.setAttribute('aria-label','Última sincronización: '+formatSyncTime(lastSyncAt));
+    }
   }
   function markSynced(){
     if(!user) return;
@@ -66,7 +74,13 @@
   function status(s){
     const message=String(s||'');
     const el=$('cloud-status');
-    if(el) el.textContent=message;
+    if(el){
+      const bad=/error|no se pudo|no se sincronizó|sin conexión|desconectad/i.test(message);
+      const compact=!navigator.onLine?'Sin conexión':bad?'Error':/verificando|sincronizando|restablecida|descargando|migrando/i.test(message)?'Sincronizando…':'Conectado';
+      el.textContent=compact;
+      el.title=message;
+      el.setAttribute('aria-label',message);
+    }
     const auth=$('auth-status');if(auth) auth.textContent=message;
     const bad=/error|no se pudo|no se sincronizó|sin conexión|desconectad/i.test(message);
     paintConnection(!navigator.onLine?'offline':bad?'error':'connected');
