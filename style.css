@@ -1760,3 +1760,64 @@ main,
   background: var(--badge-archivo);
   color: #FFFFFF;
 }
+
+
+/* Ko'eju: compactación de vendedor, precio y condición */
+.topbar {
+  padding-top: max(8px, env(safe-area-inset-top));
+  padding-bottom: 8px;
+}
+.meta-fields {
+  gap: 6px;
+  margin-top: 6px;
+}
+.meta-fields input,
+.meta-fields select,
+#vendedor-input,
+#cliente-input {
+  min-height: 35px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.nuevo-cliente-toggle {
+  min-height: 28px;
+  padding-top: 4px;
+}
+.precio-estado-row .tier-row {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  gap: 4px;
+}
+.precio-estado-row .tier-label,
+.tier-row .tier-label {
+  font-size: 9px !important;
+}
+.precio-estado-row .tier-btn {
+  min-height: 27px;
+  padding: 3px 7px;
+  font-size: 10px;
+}
+.condicion-row {
+  min-height: 0;
+  padding: 4px 10px;
+  gap: 5px;
+}
+.condicion-quick {
+  gap: 4px;
+}
+.condicion-input,
+#condicion-input {
+  min-height: 29px;
+  padding: 4px 8px;
+  border-radius: 7px;
+  font-size: 12px;
+}
+@media (max-width: 380px) {
+  .topbar { padding-left: 10px; padding-right: 10px; }
+  .meta-fields { gap: 5px; }
+  .precio-estado-row .tier-row { padding-top: 3px; padding-bottom: 3px; }
+  .precio-estado-row .tier-btn { min-height: 26px; padding: 3px 6px; font-size: 9.5px; }
+  .condicion-row { padding: 3px 8px; }
+}
