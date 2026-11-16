@@ -226,6 +226,7 @@
     archive=profile.role==='admin'?readArray(ARCHIVE_KEY):readArray(scopedKey(ARCHIVE_KEY));
     historico=profile.role==='admin'?readArray(HISTORICO_KEY):readArray(scopedKey(HISTORICO_KEY));
     applySellerPermissions();
+    try{await loadMasterCatalogs();}catch(masterError){status('No se pudieron cargar los catálogos compartidos; se conserva la base local: '+masterError.message);}
     try{await loadSharedInventory();}catch(inventoryError){status('No se pudieron cargar los datos compartidos de stock y precios: '+(inventoryError.message||inventoryError));}
     await loadCloudOrders();
     document.body.classList.remove('auth-locked');
@@ -300,6 +301,66 @@
     $('admin-recovery-btn').disabled=true;
     try{const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(error)throw error;toastSafe('Si el correo está registrado, recibirá un enlace de recuperación.');setValue('admin-recovery-email','');}
     catch(e){toastSafe('No se pudo solicitar el cambio: '+(e.message||e));}finally{$('admin-recovery-btn').disabled=false;}
+  }
+
+
+  let pendingMasterItems=null,pendingMasterClients=null;
+  function parseMasterExcel(file,type){
+    return new Promise((resolve,reject)=>{
+      if(!window.XLSX)return reject(new Error('No se pudo cargar el lector de Excel.'));
+      const reader=new FileReader();
+      reader.onerror=()=>reject(new Error('No se pudo leer el archivo.'));
+      reader.onload=e=>{try{
+        const wb=XLSX.read(e.target.result,{type:'array'}),matrix=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:''});
+        const a=type==='items'?{c:['CODARTICULO'],b:['CODFABRICA'],d:['DESCRIPCION'],g1:['AGRUP1'],g2:['AGRUP2'],g3:['AGRUP3'],sc:['CENTRAL'],sd:['CDE'],p1:['1','M1','PRECIO1'],p2:['2','M2','PRECIO2'],p3:['3','M3','PRECIO3']}:{c:['CODIGO'],n:['RAZONSOCIAL'],dep:['DEPARTAMENTO'],dst:['DISTRITO'],ciu:['CIUDAD'],tel:['TELEFONO'],tip:['TIPIDENT'],ident:['NROIDENTIFICACION']};
+        const req=type==='items'?['c','d']:['c','n'],hi=matrix.findIndex(row=>req.every(k=>row.map(normalizeStockHeader).some(h=>a[k].includes(h))));
+        if(hi<0)throw new Error('No se detectaron los encabezados obligatorios del archivo.');
+        const hs=matrix[hi].map(normalizeStockHeader),ix={};Object.keys(a).forEach(k=>ix[k]=hs.findIndex(h=>a[k].includes(h)));
+        const seen=new Set(),records=[];let invalid=0,duplicates=0;
+        for(const row of matrix.slice(hi+1)){
+          let code=normalizeStockCode(ix.c>=0?row[ix.c]:'');
+          if(type==='clients'&&/^\\d+$/.test(code)&&code.length<4)code=code.padStart(4,'0');
+          const name=String(row[ix[type==='items'?'d':'n']]||'').trim();
+          if(!code||!name){invalid++;continue;}if(seen.has(code)){duplicates++;continue;}seen.add(code);
+          const v=k=>ix[k]>=0?row[ix[k]]:'';
+          records.push(type==='items'?{c:code,b:String(v('b')||''),d:name,g1:String(v('g1')||''),g2:String(v('g2')||''),g3:String(v('g3')||''),sc:parseStockNumber(v('sc')),sd:parseStockNumber(v('sd')),p1:parseStockNumber(v('p1')),p2:parseStockNumber(v('p2')),p3:parseStockNumber(v('p3'))}:{c:code,n:name,dep:String(v('dep')||''),dst:String(v('dst')||''),ciu:String(v('ciu')||''),tel:String(v('tel')||''),tip:String(v('tip')||''),ident:String(v('ident')||'')});
+        }
+        if(!records.length)throw new Error('El Excel no contiene filas válidas.');
+        resolve({records,invalid,duplicates,filename:file.name});
+      }catch(err){reject(err);}};
+      reader.readAsArrayBuffer(file);
+    });
+  }
+  async function loadMasterTable(table){
+    const all=[];for(let from=0;;from+=1000){const {data,error}=await client.from(table).select('code,payload').order('code').range(from,from+999);if(error)throw error;all.push(...(data||[]).map(r=>r.payload));if(!data||data.length<1000)break;}return all;
+  }
+  async function loadMasterCatalogs(){
+    const [items,clients]=await Promise.all([loadMasterTable('catalog_items'),loadMasterTable('catalog_clients')]);
+    if(typeof window.KOEJU_SET_MASTER_DATA==='function')window.KOEJU_SET_MASTER_DATA(items,clients);
+    return {items:items.length,clients:clients.length};
+  }
+  async function handleMasterFile(file,type){
+    if(!file)return;const p='admin-master-'+(type==='items'?'items':'clients'),preview=$(p+'-preview'),btn=$(p+'-confirm');
+    preview.textContent='Leyendo y validando '+file.name+'...';btn.style.display='none';
+    try{const parsed=await parseMasterExcel(file,type);if(type==='items')pendingMasterItems=parsed;else pendingMasterClients=parsed;
+      preview.textContent=parsed.filename+' · '+parsed.records.length.toLocaleString('es-PY')+' filas válidas · '+parsed.duplicates+' códigos repetidos omitidos · '+parsed.invalid+' filas incompletas omitidas. Solo se reemplazará esta base maestra.';
+      btn.style.display='';
+    }catch(e){if(type==='items')pendingMasterItems=null;else pendingMasterClients=null;preview.textContent='No se pudo validar: '+e.message;}
+  }
+  async function uploadMasterCatalog(type,parsed){
+    if(!user||profile.role!=='admin'||!parsed)return;
+    const id=crypto.randomUUID(),table=type==='items'?'catalog_items':'catalog_clients',btn=$('admin-master-'+type+'-confirm'),preview=$('admin-master-'+type+'-preview');
+    btn.disabled=true;
+    try{
+      const rows=parsed.records.map(x=>({import_id:id,catalog_type:type,code:x.c,payload:x}));
+      for(let i=0;i<rows.length;i+=400){const {error}=await client.from('catalog_import_rows').upsert(rows.slice(i,i+400),{onConflict:'import_id,catalog_type,code'});if(error)throw error;preview.textContent='Preparando '+Math.min(i+400,rows.length)+' de '+rows.length+'...';}
+      const {data,error}=await client.rpc('publish_master_catalog',{p_import_id:id,p_catalog_type:type});if(error)throw error;
+      await loadMasterCatalogs();
+      const msg='Catálogo actualizado para todos: '+Number(data||rows.length).toLocaleString('es-PY')+' registros. Los pedidos históricos no se modificaron.';
+      preview.textContent=msg;$('admin-master-'+type+'-confirm').style.display='none';
+      if(type==='items')pendingMasterItems=null;else pendingMasterClients=null;status(msg);toastSafe(msg);
+    }catch(e){preview.textContent='No se pudo publicar: '+e.message;status('Error al publicar catálogo: '+e.message);await client.from('catalog_import_rows').delete().eq('import_id',id);}
+    finally{btn.disabled=false;}
   }
 
   let pendingSharedInventory = null;
@@ -437,6 +498,8 @@
         <div class="admin-actions"><button id="admin-inventory-confirm" style="display:none">Confirmar y actualizar para todos</button></div>
         <p id="admin-inventory-preview" class="admin-note" aria-live="polite">Elegí el Excel actualizado para validar sus filas antes de reemplazar los datos compartidos.</p>
       </section>
+      <section class="admin-section"><h3>Actualizar catálogo de productos desde Excel</h3><p class="admin-note">Excel con Cód.Artículo y Descripción; opcionalmente agrupaciones, stock y precios. Se comparte con todos los usuarios.</p><input type="file" id="admin-master-items-file" accept=".xlsx,.xls" style="width:100%;margin:6px 0"><div class="admin-actions"><button id="admin-master-items-confirm" style="display:none">Confirmar y publicar productos</button></div><p id="admin-master-items-preview" class="admin-note" aria-live="polite">Elegí el Excel de productos.</p></section>
+      <section class="admin-section"><h3>Actualizar base de clientes desde Excel</h3><p class="admin-note">Excel con Código y Razón Social. Se excluyen saldos y datos de deuda. Se comparte con todos los usuarios.</p><input type="file" id="admin-master-clients-file" accept=".xlsx,.xls" style="width:100%;margin:6px 0"><div class="admin-actions"><button id="admin-master-clients-confirm" style="display:none">Confirmar y publicar clientes</button></div><p id="admin-master-clients-preview" class="admin-note" aria-live="polite">Elegí el Excel de clientes.</p></section>
       <section class="admin-section"><h3>Agregar usuarios vendedores</h3><p class="admin-note">Esta opción requiere configurar una función segura en Supabase. No es seguro incluir la clave de administración en la aplicación pública.</p><p class="admin-note"><strong>Pendiente:</strong> alta de nuevas cuentas y asignación inicial desde este menú. Las cuentas existentes siguen funcionando sin cambios.</p></section>`;
     ['admin-date-from','admin-date-to'].forEach(id=>$(id).addEventListener('change',renderAdminReport));$('admin-seller-filter').addEventListener('change',renderAdminReport);
     $('admin-export-report').addEventListener('click',exportAdminReport);
@@ -444,6 +507,8 @@
     $('admin-recovery-btn').addEventListener('click',sendSellerRecovery);renderAdminReport();
     $('admin-inventory-file').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];handleSharedInventoryFile(file);e.target.value='';});
     $('admin-inventory-confirm').addEventListener('click',()=>{if(confirm('¿Reemplazar el stock y los tres niveles de precios compartidos para todos los usuarios?'))confirmSharedInventoryUpload();});
+    ['items','clients'].forEach(type=>{const prefix='admin-master-'+type;$(prefix+'-file').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];handleMasterFile(file,type);e.target.value='';});$(prefix+'-confirm').addEventListener('click',()=>{const parsed=type==='items'?pendingMasterItems:pendingMasterClients;if(parsed&&confirm('¿Publicar la nueva base para todos? Los pedidos históricos no se modificarán.'))uploadMasterCatalog(type,parsed);});});
+
   }
 
   const recoveryLayer=document.createElement('div');
