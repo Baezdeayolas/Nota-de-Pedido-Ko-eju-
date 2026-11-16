@@ -312,7 +312,7 @@
       reader.onerror=()=>reject(new Error('No se pudo leer el archivo.'));
       reader.onload=e=>{try{
         const wb=XLSX.read(e.target.result,{type:'array'}),matrix=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:''});
-        const a=type==='items'?{c:['CODARTICULO'],b:['CODFABRICA'],d:['DESCRIPCION'],g1:['AGRUP1'],g2:['AGRUP2'],g3:['AGRUP3'],sc:['CENTRAL'],sd:['CDE'],p1:['1','M1','PRECIO1'],p2:['2','M2','PRECIO2'],p3:['3','M3','PRECIO3']}:{c:['CODIGO'],n:['RAZONSOCIAL'],dep:['DEPARTAMENTO'],dst:['DISTRITO'],ciu:['CIUDAD'],tel:['TELEFONO'],tip:['TIPIDENT'],ident:['NROIDENTIFICACION']};
+        const a=type==='items'?{c:['CODARTICULO'],b:['CODBARRA'],d:['DESCRIPCION'],g1:['AGRUP1'],g2:['AGRUP2'],g3:['AGRUP3'],sc:['CENTRAL'],sd:['CDE'],p1:['1','M1','PRECIO1'],p2:['2','M2','PRECIO2'],p3:['3','M3','PRECIO3']}:{c:['CODIGO'],n:['RAZONSOCIAL'],dep:['DEPARTAMENTO'],dst:['DISTRITO'],ciu:['CIUDAD'],tel:['TELEFONO'],tip:['TIPIDENT'],ident:['NROIDENTIFICACION']};
         const req=type==='items'?['c','d']:['c','n'],hi=matrix.findIndex(row=>req.every(k=>row.map(normalizeStockHeader).some(h=>a[k].includes(h))));
         if(hi<0)throw new Error('No se detectaron los encabezados obligatorios del archivo.');
         const hs=matrix[hi].map(normalizeStockHeader),ix={};Object.keys(a).forEach(k=>ix[k]=hs.findIndex(h=>a[k].includes(h)));
