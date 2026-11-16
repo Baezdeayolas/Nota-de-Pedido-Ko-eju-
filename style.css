@@ -1073,7 +1073,7 @@ body { min-height: 100%; }
 
 /* El menú pasa al pie, sin cambiar sus data-panel ni listeners. */
 .tabs {
-  order: 6; flex-shrink: 0; position: relative; z-index: 30;
+  order: 7; flex-shrink: 0; position: relative; z-index: 30;
   padding: 5px 4px calc(5px + env(safe-area-inset-bottom));
   background: rgba(255,255,255,.97);
   border-top: 1px solid var(--line); border-bottom: 0;
@@ -1088,7 +1088,7 @@ body { min-height: 100%; }
 .tab-btn.active { color: var(--rust-dark); background: #E8F2ED; }
 .tab-btn .count { min-width: 15px; height: 15px; font-size: 9px; }
 main { order: 5; min-height: 0; padding-bottom: 8px; }
-.footer { order: 7; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); gap: 8px; }
+.footer { order: 6; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); gap: 8px; }
 .total-block .total-label { font-size: 10px; }
 .total-block .total-value { font-size: 20px; }
 .btn { min-height: 42px; padding: 9px 13px; border-radius: 10px; font-size: 13px; }
