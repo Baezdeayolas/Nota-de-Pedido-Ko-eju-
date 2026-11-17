@@ -114,6 +114,18 @@
       <span id="editing-banner-text"></span>
       <button id="editing-banner-exit" class="btn-outline btn-sm">Salir</button>
     </div>
+    <section class="order-visual-panel" aria-label="Personalización visual del pedido">
+      <div class="order-visual-heading">
+        <div>
+          <span class="order-visual-kicker">AB SYSTEM · PEDIDO</span>
+          <strong>Fondo del pedido</strong>
+          <small>Ajustá la intensidad de la imagen sin modificar tus datos.</small>
+        </div>
+        <output id="order-bg-opacity-value" for="order-bg-opacity">22%</output>
+      </div>
+      <input id="order-bg-opacity" class="order-bg-opacity" type="range" min="5" max="65" step="1" value="22" aria-label="Intensidad del fondo del pedido">
+      <div class="order-visual-scale"><span>Suave</span><span>Más visible</span></div>
+    </section>
     <div class="order-list" id="order-list"></div>
     <div class="order-discount-panel">
       <label for="discount-input">Descuento del pedido (%)</label>

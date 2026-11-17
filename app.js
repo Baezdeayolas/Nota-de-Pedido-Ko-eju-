@@ -496,6 +496,35 @@ const orderList = document.getElementById('order-list');
 const orderEmpty = document.getElementById('order-empty');
 const tabOrderCount = document.getElementById('tab-order-count');
 const discountInput = document.getElementById('discount-input');
+
+// Control visual independiente: no toca pedidos, clientes ni productos.
+const ORDER_BG_OPACITY_KEY = 'absystem_order_bg_opacity_v1';
+const orderBgOpacityInput = document.getElementById('order-bg-opacity');
+const orderBgOpacityValue = document.getElementById('order-bg-opacity-value');
+
+function setOrderBackgroundOpacity(value, persist = false) {
+  const opacity = Math.min(65, Math.max(5, Number(value) || 22));
+  const panel = document.getElementById('panel-order');
+  if (panel) panel.style.setProperty('--order-bg-opacity', String(opacity / 100));
+  if (orderBgOpacityInput) orderBgOpacityInput.value = String(opacity);
+  if (orderBgOpacityValue) orderBgOpacityValue.textContent = `${opacity}%`;
+  if (persist) {
+    try { localStorage.setItem(ORDER_BG_OPACITY_KEY, String(opacity)); } catch (e) { /* preferencia visual opcional */ }
+  }
+}
+
+let savedOrderBgOpacity = 22;
+try {
+  const storedOpacity = localStorage.getItem(ORDER_BG_OPACITY_KEY);
+  if (storedOpacity !== null) savedOrderBgOpacity = Number(storedOpacity);
+} catch (e) { /* usar valor predeterminado */ }
+setOrderBackgroundOpacity(savedOrderBgOpacity);
+if (orderBgOpacityInput) {
+  orderBgOpacityInput.addEventListener('input', () => {
+    setOrderBackgroundOpacity(orderBgOpacityInput.value, true);
+  });
+}
+
 discountInput.addEventListener('input', () => {
   const raw = Number(discountInput.value);
   if (discountInput.value !== '' && raw > 100) discountInput.value = '100';
