@@ -12,16 +12,20 @@
   const labelOptions = Array.from($('vendedor-input').options).map(o => o.value).filter(Boolean);
   const css = document.createElement('style');
   css.textContent = `
-    .cloud-bar{padding:2px 5px;background:transparent;color:#FFFFFF;font:10px sans-serif;display:flex;gap:4px;align-items:center;flex:0 1 auto;min-width:0;white-space:nowrap}
+    .topbar-title{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+    .topbar-brand{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0}
+    .topbar-brand>span{font-family:Arial,sans-serif;font-size:20px;font-weight:800;letter-spacing:.045em;line-height:1.05;color:#FFFFFF}
+    .topbar-tagline{font:600 8px/1.2 Arial,sans-serif;letter-spacing:.105em;color:#C7DDF5;white-space:nowrap}
+    .cloud-bar{padding:2px 0;background:transparent;color:#FFFFFF;font:10px sans-serif;display:flex;gap:5px;align-items:center;justify-content:flex-end;flex:0 1 auto;min-width:0;white-space:nowrap;margin-left:auto}
     .cloud-bar input{min-width:0;flex:1;padding:8px;border-radius:6px;border:1px solid #aaa}
     .cloud-bar button{padding:8px 10px;border-radius:6px;background:#78BFE3;color:#203B35;font-weight:700}
     .cloud-status{font-size:10px;opacity:.98;line-height:1.2;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .cloud-status-dot{width:7px;height:7px;border-radius:50%;background:#78BFE3;flex:0 0 7px;box-shadow:0 0 0 2px rgba(255,255,255,.12)}
     .cloud-status-dot.connected{background:#72D69A}.cloud-status-dot.error,.cloud-status-dot.offline{background:#FF7777}
-    .cloud-last-sync{flex:0 1 auto;font-size:9px;color:#C7DDF5;padding:0;line-height:1.2;white-space:nowrap}
-    .topbar-title{align-items:center;gap:5px}
-    .topbar-title .cloud-bar{margin-left:auto}
-    @media(max-width:390px){.topbar-title{gap:3px}.topbar-title h1{font-size:18px}.topbar-title .topbar-brand>span{font-size:10px}.cloud-bar{gap:3px;padding:2px}.cloud-status{font-size:9px}.cloud-last-sync{font-size:8px}}
+    .cloud-last-sync{flex:0 1 auto;font-size:8px;color:#C7DDF5;padding:0;line-height:1.2;white-space:nowrap}
+    .cloud-logout{padding:3px 6px;border:1px solid rgba(255,255,255,.28);border-radius:6px;background:transparent;color:#FFFFFF;font:600 9px/1.2 Arial,sans-serif;white-space:nowrap}
+    @media(max-width:390px){.topbar{padding-left:10px;padding-right:10px}.topbar-brand>span{font-size:17px}.topbar-tagline{font-size:7px;letter-spacing:.07em}.cloud-bar{gap:3px}.cloud-status{font-size:9px}.cloud-last-sync{font-size:8px}.cloud-logout{font-size:8px;padding:3px 5px}}
+    @media(max-width:340px){.cloud-last-sync{display:none}.topbar-brand>span{font-size:16px}.topbar-tagline{font-size:6.5px}}
     .admin-panel-content{padding:14px 12px 100px}.admin-heading{margin:2px 2px 12px}.admin-heading h2{margin:0;font-size:21px}.admin-heading p,.admin-note{color:#65716a;font-size:12px;line-height:1.5}
     .admin-section{background:#fff;border:1px solid #d8ddd7;border-radius:12px;padding:13px;margin:10px 0}.admin-section h3{margin:0 0 10px;font-size:16px}
     .admin-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px}.admin-filters label,.admin-user-form label{display:block;font-size:12px;color:#526057}
@@ -45,8 +49,8 @@
   document.body.appendChild(gate);
   const bar = document.createElement('section');
   bar.className = 'cloud-bar';
-  bar.innerHTML = '<span id="cloud-status-dot" class="cloud-status-dot" aria-hidden="true"></span><span id="cloud-status" class="cloud-status" role="status" aria-live="polite">Verificando conexión...</span><span id="cloud-last-sync" class="cloud-last-sync">Última sincronización: todavía no registrada</span>';
-  document.querySelector('.topbar-title').insertBefore(bar, document.querySelector('.topbar-brand'));
+  bar.innerHTML = '<span id="cloud-status-dot" class="cloud-status-dot" aria-hidden="true"></span><span id="cloud-status" class="cloud-status" role="status" aria-live="polite">Verificando conexión...</span><span id="cloud-last-sync" class="cloud-last-sync">Última sincronización: todavía no registrada</span><button id="cloud-logout" class="cloud-logout" type="button" style="display:none">Cerrar sesión</button>';
+  document.querySelector('.topbar-title').appendChild(bar);
   let lastSyncAt = null;
   const syncStampKey = () => user ? 'koeju_last_sync_user_'+user.id : '';
   const formatSyncTime = value => value ? new Date(value).toLocaleString('es-PY',{dateStyle:'short',timeStyle:'short'}) : 'todavía no registrada';
