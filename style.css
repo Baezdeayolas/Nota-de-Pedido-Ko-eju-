@@ -1861,3 +1861,24 @@ main,
   .topbar-brand > span { font-size: 16px; }
   .topbar-tagline { font-size: 6.5px; }
 }
+
+
+/* ---------- Fondo sutil del área central de pedidos AB SYSTEM ---------- */
+.area-central-pedido {
+  position: relative;
+  isolation: isolate;
+  background-color: #f7f5ea;
+}
+
+.area-central-pedido::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url('./Icons/ventafondo.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.05;
+  pointer-events: none;
+  z-index: -1;
+}
