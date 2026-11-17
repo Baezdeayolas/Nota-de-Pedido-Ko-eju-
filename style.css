@@ -2169,17 +2169,27 @@ main { background:#202a34; }
   .footer { gap:7px; }
 }
 
-/* Búsqueda: mostrar la fotografía completa cuando no hay resultados. */
+/* Búsqueda: fotografía completa con una capa gris azulada oscura. */
 #panel-search {
+  position: relative;
+  isolation: isolate;
   min-height: 100%;
+  background-color: #302f29;
 }
 #panel-search::before {
-  inset: 78px 0 0;
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   background-color: #302f29;
   background-image:
-    linear-gradient(rgba(22,24,22,.24),rgba(22,24,22,.24)),
+    linear-gradient(rgba(27, 37, 49, .76), rgba(27, 37, 49, .76)),
     url('./Icons/ventafondo.jpg');
   background-position: center center;
   background-size: contain;
   background-repeat: no-repeat;
+  pointer-events: none;
+}
+#panel-search .search-wrap {
+  background: rgba(27, 37, 49, .88);
 }
