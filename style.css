@@ -1973,3 +1973,198 @@ main,
   .order-visual-panel { margin: 9px 9px 7px; padding: 11px 12px 8px; }
   .order-visual-heading small { font-size: 10px; }
 }
+
+
+/* ---------- Diseño de referencia AB SYSTEM (captura 16/11/2026) ---------- */
+:root {
+  --ink: #174477;
+  --ink-soft: #244f7e;
+  --paper: #202a34;
+  --paper-dim: #202a34;
+  --rust: #168fe0;
+  --rust-dark: #0878c6;
+  --gold: #a8c9ef;
+  --green: #20b36b;
+  --line: rgba(210,225,240,.16);
+}
+html, body { background:#111; color:#dbe6f4; }
+.topbar {
+  background:#174477;
+  color:#fff;
+  padding:13px 14px 10px;
+  box-shadow:none;
+}
+.topbar-title { align-items:flex-start; }
+.topbar-brand { display:flex; flex-direction:column; gap:2px; }
+.topbar-title span {
+  color:#fff;
+  font-family:Arial,sans-serif;
+  font-size:21px;
+  font-weight:800;
+  letter-spacing:.01em;
+}
+.topbar-tagline {
+  color:#c9ddf3;
+  font:500 10px/1.25 Arial,sans-serif;
+  letter-spacing:.08em;
+}
+.meta-fields { gap:8px; margin-top:12px; }
+.meta-fields input, .meta-fields select {
+  min-height:43px;
+  padding:9px 12px;
+  border:0;
+  border-radius:13px;
+  background:#25251f;
+  color:#f4f6fa;
+  font:600 13px Arial,sans-serif;
+}
+.meta-fields input::placeholder { color:#aab4c2; }
+.meta-fields select { background-color:#25251f; }
+.client-tools-row {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  min-height:34px;
+  margin-top:7px;
+}
+.nuevo-cliente-toggle {
+  color:#f1f5fb;
+  font:600 11px/1.25 Arial,sans-serif;
+  padding:5px 7px 2px;
+  white-space:normal;
+  text-align:center;
+}
+.precio-estado-row, .condicion-row {
+  background:#202a34;
+  color:#d5e2f2;
+  border-color:rgba(220,235,250,.15);
+}
+.precio-estado-row .tier-row { padding:7px 9px; }
+.tier-row .tier-label { color:#c4d8ef; font:700 11px Arial,sans-serif; }
+.tier-btn {
+  background:#26384b;
+  border:1px solid transparent;
+  color:#c7d9ef;
+  border-radius:12px;
+  font:700 12px Arial,sans-serif;
+  min-height:36px;
+  padding:7px 12px;
+}
+.tier-btn.active, .tier-btn.selected {
+  background:#20b36b;
+  color:#fff;
+  border-color:#20b36b;
+}
+.condicion-row { padding:7px 12px; gap:8px; }
+.condicion-input {
+  min-height:38px;
+  background:#25251f;
+  border:1px solid rgba(220,235,250,.18);
+  color:#fff;
+  border-radius:12px;
+}
+.condicion-input::placeholder { color:#aab4c2; }
+main { background:#202a34; }
+.panel { color:#dce7f5; }
+#panel-search {
+  position:relative;
+  isolation:isolate;
+  background:#302f29;
+  min-height:0;
+}
+#panel-search::before {
+  content:"";
+  position:absolute;
+  inset:78px 0 0;
+  z-index:-1;
+  background:
+    linear-gradient(rgba(22,24,22,.64),rgba(22,24,22,.64)),
+    url('./Icons/ventafondo.jpg') center center / cover no-repeat;
+  pointer-events:none;
+}
+.search-wrap {
+  position:relative;
+  z-index:1;
+  padding:12px 12px 10px;
+  background:#25251f;
+}
+.search-input-row { gap:10px; }
+.search-wrap input {
+  min-height:54px;
+  border-radius:18px;
+  background:#25251f;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.35);
+  box-shadow:none;
+  font-size:14px;
+}
+.search-wrap input::placeholder { color:#aab4c2; }
+.scan-btn {
+  min-width:54px;
+  min-height:54px;
+  border-radius:17px;
+  background:#25251f;
+  border:1px solid rgba(255,255,255,.35);
+  color:#e4edf8;
+}
+.result-count { color:#dce7f5; }
+.item-list { position:relative; }
+#panel-order.area-central-pedido {
+  background-color:#302f29;
+  color:#e5edf7;
+}
+.area-central-pedido::before {
+  background-image:url('./Icons/ventafondo.jpg');
+  opacity:var(--order-bg-opacity,.22);
+}
+.order-visual-panel {
+  background:rgba(32,42,52,.92);
+  border-color:rgba(220,235,250,.18);
+  color:#e2ebf7;
+}
+.order-visual-heading small, .order-visual-kicker { color:#b7cce4; }
+.order-visual-heading output { color:#fff; }
+.order-discount-panel {
+  background:rgba(32,42,52,.94);
+  color:#e2ebf7;
+}
+.order-card { background:#26384b; color:#f1f6fc; }
+.tabs {
+  background:#111;
+  border-top:1px solid rgba(255,255,255,.08);
+  border-bottom:0;
+  color:#cbd7e6;
+}
+.tab-btn { color:#b8c6d8; }
+.tab-btn.active {
+  color:#dcecff;
+  background:#172b24;
+  box-shadow:inset 0 3px 0 #20b36b;
+}
+.tab-btn .count { background:#e4ae00; color:#fff; }
+.footer {
+  background:#174477;
+  color:#fff;
+  border-top:0;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+}
+.total-label { color:#c7ddf3; }
+.total-value { color:#fff; }
+.btn-ghost {
+  background:#24558a;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.16);
+}
+.btn-primary { background:#168fe0; color:#fff; }
+.empty-state { color:#e1eaf5; }
+@media(max-width:420px) {
+  .topbar { padding-left:12px; padding-right:12px; }
+  .topbar-title span { font-size:20px; }
+  .meta-fields { gap:7px; }
+  .meta-fields input, .meta-fields select { min-height:42px; font-size:12px; }
+  .precio-estado-row .tier-row { gap:5px; padding:6px 7px; }
+  .precio-estado-row .tier-btn { min-height:34px; padding:6px 10px; font-size:11px; }
+  .condicion-row { padding:6px 9px; }
+  .footer { gap:7px; }
+}
