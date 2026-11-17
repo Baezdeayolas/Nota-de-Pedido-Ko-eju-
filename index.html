@@ -46,7 +46,7 @@
       <div class="cliente-suggestions" id="cliente-suggestions"></div>
     </div>
   </div>
-  <button type="button" class="nuevo-cliente-toggle" id="nuevo-cliente-toggle">+ Datos cliente nuevo (RUC / Dirección / Tel.)</button>
+  <div class="client-tools-row"><button type="button" class="nuevo-cliente-toggle" id="nuevo-cliente-toggle">+ Datos de clientes nuevos</button><div id="cloud-status-slot"></div></div>
   <div class="nuevo-cliente-panel" id="nuevo-cliente-panel" style="display:none;">
     <input id="ruc-input" type="text" placeholder="RUC" autocomplete="off">
     <input id="direccion-input" type="text" placeholder="Dirección" autocomplete="off">
@@ -206,9 +206,9 @@
 
 <nav class="tabs" aria-label="Navegación principal">
   <button class="tab-btn active" data-panel="panel-search" aria-label="Buscar"><span class="tab-icon">⌕</span><span class="tab-label">Buscar</span></button>
-  <button class="tab-btn" data-panel="panel-dashboard" aria-label="Resumen"><span class="tab-icon">▦</span><span class="tab-label">Resumen</span></button>
   <button class="tab-btn" data-panel="panel-order" aria-label="Pedido"><span class="tab-icon">＋</span><span class="tab-label">Pedido</span><span class="count" id="tab-order-count">0</span></button>
   <button class="tab-btn" data-panel="panel-archive" aria-label="Archivo"><span class="tab-icon">▤</span><span class="tab-label">Archivo</span><span class="count" id="tab-archive-count">0</span></button>
+  <button class="tab-btn" data-panel="panel-dashboard" aria-label="Resumen"><span class="tab-icon">▦</span><span class="tab-label">Resumen</span></button>
   <button class="tab-btn" data-panel="panel-stock" aria-label="Stock"><span class="tab-icon">▥</span><span class="tab-label">Stock</span></button>
   <button class="tab-btn" data-panel="panel-admin" id="admin-menu-tab" aria-label="Administración" style="display:none;"><span class="tab-icon">⚙</span><span class="tab-label">Admin</span></button>
 </nav>
