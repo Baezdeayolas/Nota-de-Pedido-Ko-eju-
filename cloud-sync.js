@@ -16,7 +16,13 @@
     .topbar-brand{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0}
     .topbar-brand>span{font-family:Arial,sans-serif;font-size:20px;font-weight:800;letter-spacing:.045em;line-height:1.05;color:#FFFFFF}
     .topbar-tagline{font:600 8px/1.2 Arial,sans-serif;letter-spacing:.105em;color:#C7DDF5;white-space:nowrap}
-    .cloud-bar{padding:2px 0;background:transparent;color:#FFFFFF;font:10px sans-serif;display:flex;gap:5px;align-items:center;justify-content:flex-end;flex:0 1 auto;min-width:0;white-space:nowrap;margin-left:auto}
+    .client-tools-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;margin-top:4px}
+    #cloud-status-slot{display:flex;align-items:center;justify-content:flex-end;min-width:0;flex:1}
+    .cloud-bar{padding:2px 0;background:transparent;color:#D1E2DA;font:10px sans-serif;display:flex;gap:5px;align-items:center;justify-content:flex-end;flex:0 1 auto;min-width:0;white-space:nowrap;margin-left:auto}
+    .client-tools-row .nuevo-cliente-toggle{padding:3px 0 0;flex:0 1 auto;min-width:0;white-space:nowrap}
+    .client-tools-row .cloud-logout{font-size:8px;padding:3px 5px}
+    @media(max-width:390px){.client-tools-row{gap:5px}.client-tools-row .nuevo-cliente-toggle{font-size:9px}.cloud-bar{gap:3px}.cloud-status{font-size:9px}.cloud-last-sync{font-size:8px}}
+    @media(max-width:340px){.cloud-last-sync{display:none}.client-tools-row .nuevo-cliente-toggle{font-size:8px}}
     .cloud-bar input{min-width:0;flex:1;padding:8px;border-radius:6px;border:1px solid #aaa}
     .cloud-bar button{padding:8px 10px;border-radius:6px;background:#78BFE3;color:#203B35;font-weight:700}
     .cloud-status{font-size:10px;opacity:.98;line-height:1.2;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -50,7 +56,8 @@
   const bar = document.createElement('section');
   bar.className = 'cloud-bar';
   bar.innerHTML = '<span id="cloud-status-dot" class="cloud-status-dot" aria-hidden="true"></span><span id="cloud-status" class="cloud-status" role="status" aria-live="polite">Verificando conexión...</span><span id="cloud-last-sync" class="cloud-last-sync">Última sincronización: todavía no registrada</span><button id="cloud-logout" class="cloud-logout" type="button" style="display:none">Cerrar sesión</button>';
-  document.querySelector('.topbar-title').appendChild(bar);
+  const statusSlot=$('cloud-status-slot');
+  (statusSlot||document.querySelector('.topbar-title')).appendChild(bar);
   let lastSyncAt = null;
   const syncStampKey = () => user ? 'koeju_last_sync_user_'+user.id : '';
   const formatSyncTime = value => value ? new Date(value).toLocaleString('es-PY',{dateStyle:'short',timeStyle:'short'}) : 'todavía no registrada';
