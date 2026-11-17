@@ -1882,3 +1882,94 @@ main,
   pointer-events: none;
   z-index: -1;
 }
+
+
+/* ---------- Integración visual de la maqueta AB SYSTEM ---------- */
+.area-central-pedido {
+  --order-bg-opacity: .22;
+  background-color: #f7f5ea;
+}
+.area-central-pedido::before {
+  opacity: var(--order-bg-opacity);
+  transition: opacity .18s ease;
+}
+.order-visual-panel {
+  position: relative;
+  margin: 12px 12px 8px;
+  padding: 13px 15px 10px;
+  border: 1px solid rgba(32,59,53,.12);
+  border-radius: 16px;
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 5px 18px rgba(24,48,40,.07);
+  backdrop-filter: blur(8px);
+}
+.order-visual-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.order-visual-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.order-visual-kicker {
+  color: var(--rust-dark);
+  font: 700 9px/1.2 var(--font-mono);
+  letter-spacing: .09em;
+}
+.order-visual-heading strong {
+  color: var(--ink);
+  font: 700 14px/1.25 var(--font-display);
+}
+.order-visual-heading small {
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.35;
+}
+.order-visual-heading output {
+  flex: 0 0 auto;
+  min-width: 48px;
+  padding: 6px 8px;
+  border-radius: 9px;
+  background: #E8F2ED;
+  color: var(--rust-dark);
+  text-align: center;
+  font: 700 12px/1 var(--font-mono);
+}
+.order-bg-opacity {
+  display: block;
+  width: 100%;
+  height: 24px;
+  margin: 7px 0 0;
+  accent-color: var(--rust);
+  cursor: pointer;
+}
+.order-visual-scale {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-soft);
+  font: 10px/1.2 var(--font-body);
+}
+.area-central-pedido .order-list {
+  position: relative;
+  padding: 5px 12px 18px;
+  gap: 9px;
+}
+.area-central-pedido .order-card {
+  border: 1px solid rgba(32,59,53,.14);
+  border-radius: 14px;
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 4px 14px rgba(24,48,40,.07);
+}
+.area-central-pedido .order-discount-panel {
+  background: rgba(255,255,255,.94);
+  border-radius: 14px;
+  box-shadow: 0 3px 12px rgba(24,48,40,.05);
+}
+@media (max-width: 390px) {
+  .order-visual-panel { margin: 9px 9px 7px; padding: 11px 12px 8px; }
+  .order-visual-heading small { font-size: 10px; }
+}
