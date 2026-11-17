@@ -2168,3 +2168,18 @@ main { background:#202a34; }
   .condicion-row { padding:6px 9px; }
   .footer { gap:7px; }
 }
+
+/* Búsqueda: mostrar la fotografía completa cuando no hay resultados. */
+#panel-search {
+  min-height: 100%;
+}
+#panel-search::before {
+  inset: 78px 0 0;
+  background-color: #302f29;
+  background-image:
+    linear-gradient(rgba(22,24,22,.24),rgba(22,24,22,.24)),
+    url('./Icons/ventafondo.jpg');
+  background-position: center center;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
