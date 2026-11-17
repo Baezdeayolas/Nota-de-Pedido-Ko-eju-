@@ -2180,6 +2180,6 @@ main { background:#202a34; }
     linear-gradient(rgba(22,24,22,.24),rgba(22,24,22,.24)),
     url('./Icons/ventafondo.jpg');
   background-position: center center;
-  background-size: 100% 100%;
+  background-size: contain;
   background-repeat: no-repeat;
 }
