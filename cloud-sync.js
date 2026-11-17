@@ -49,7 +49,7 @@
   document.body.appendChild(gate);
   const bar = document.createElement('section');
   bar.className = 'cloud-bar';
-  bar.innerHTML = '<span id="cloud-status-dot" class="cloud-status-dot" aria-hidden="true"></span><span id="cloud-status" class="cloud-status" role="status" aria-live="polite">Verificando conexión...</span><span id="cloud-last-sync" class="cloud-last-sync">Última sincronización: todavía no registrada</span><button id="cloud-logout" class="cloud-logout" type="button" style="display:none">Salir</button>';
+  bar.innerHTML = '<span id="cloud-status-dot" class="cloud-status-dot" aria-hidden="true"></span><span id="cloud-status" class="cloud-status" role="status" aria-live="polite">Verificando conexión...</span><span id="cloud-last-sync" class="cloud-last-sync">Última sincronización: todavía no registrada</span><button id="cloud-logout" class="cloud-logout" type="button" style="display:none">Cerrar sesión</button>';
   document.querySelector('.topbar-title').appendChild(bar);
   let lastSyncAt = null;
   const syncStampKey = () => user ? 'koeju_last_sync_user_'+user.id : '';
