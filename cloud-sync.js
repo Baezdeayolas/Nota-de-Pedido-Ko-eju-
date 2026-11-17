@@ -12,10 +12,14 @@
   const labelOptions = Array.from($('vendedor-input').options).map(o => o.value).filter(Boolean);
   const css = document.createElement('style');
   css.textContent = `
-    .topbar-title{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
-    .topbar-brand{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0}
-    .topbar-brand>span{font-family:Arial,sans-serif;font-size:20px;font-weight:800;letter-spacing:.045em;line-height:1.05;color:#FFFFFF}
-    .topbar-tagline{font:600 8px/1.2 Arial,sans-serif;letter-spacing:.105em;color:#C7DDF5;white-space:nowrap}
+    .topbar{background:linear-gradient(112deg,#061f3d 0%,#0a3158 58%,#07517b 100%);color:#fff;padding:11px 16px 9px;border-bottom:2px solid #19b8ed;box-shadow:0 3px 12px rgba(3,20,39,.18)}
+    .topbar-title{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;position:relative;padding-bottom:7px}
+    .topbar-title:after{content:"";position:absolute;left:0;bottom:0;width:min(58%,260px);height:2px;border-radius:4px;background:linear-gradient(90deg,#0aa9e8,#4bd4f5,transparent)}
+    .topbar-brand{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0}
+    .topbar-brand>span{font-family:'Space Grotesk',Arial,sans-serif;font-size:23px;font-weight:700;letter-spacing:.015em;line-height:1;color:#FFFFFF;text-shadow:0 1px 8px rgba(0,0,0,.18)}
+    .topbar-tagline{font:700 8px/1.25 Arial,sans-serif;letter-spacing:.12em;color:#63d6ff;white-space:nowrap}
+    @media(max-width:390px){.topbar{padding:9px 10px 8px}.topbar-brand>span{font-size:20px}.topbar-tagline{font-size:7px;letter-spacing:.09em}}
+    @media(max-width:340px){.topbar-brand>span{font-size:18px}.topbar-tagline{font-size:6.5px}}
     .client-tools-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;margin-top:4px}
     #cloud-status-slot{display:flex;align-items:center;justify-content:flex-end;min-width:0;flex:1}
     .cloud-bar{padding:2px 0;background:transparent;color:#D1E2DA;font:10px sans-serif;display:flex;gap:5px;align-items:center;justify-content:flex-end;flex:0 1 auto;min-width:0;white-space:nowrap;margin-left:auto}
