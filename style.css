@@ -2241,3 +2241,41 @@ main { background:#202a34; }
   background: rgba(161, 61, 61, .15);
   color: #963747;
 }
+
+
+/* Encabezado AB SYSTEM: logo centrado e integrado al fondo */
+.topbar {
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(18,105,158,.24) 0%, rgba(8,38,66,.12) 48%, transparent 76%),
+    linear-gradient(180deg, #03182b 0%, #06243d 58%, #0a3150 100%);
+  border-bottom: 1px solid rgba(72,190,235,.30);
+  box-shadow: 0 5px 18px rgba(0,12,28,.22);
+}
+.topbar-title {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:100%;
+  min-height:0;
+  margin:0 auto;
+}
+.topbar-brand {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  width:100%;
+  min-width:0;
+}
+.topbar-logo-image {
+  display:block;
+  width:min(100%, 560px);
+  height:auto;
+  max-height:clamp(76px, 23vw, 132px);
+  object-fit:contain;
+  object-position:center;
+  filter:drop-shadow(0 3px 12px rgba(0,151,255,.12));
+}
+@media (max-width:420px) {
+  .topbar { padding:7px 10px 9px; }
+  .topbar-logo-image { max-height:clamp(72px, 25vw, 104px); }
+}
