@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pedidos-koeju-v103';
+const CACHE_NAME = 'pedidos-koeju-v104';
 const ASSETS = [
   './',
   './index.html',
@@ -10,7 +10,8 @@ const ASSETS = [
   './manifest.json',
   './Icons/icon-192.png',
   './Icons/icon-512.png',
-  './Icons/ventafondo.jpg'
+  './Icons/ventafondo.jpg',
+  './Icons/ab-system-header.jpg'
 ];
 
 self.addEventListener('install', (event) => {
