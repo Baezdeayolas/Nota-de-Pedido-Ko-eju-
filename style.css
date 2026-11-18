@@ -2187,3 +2187,57 @@ main { background:#202a34; }
 #panel-archive .result-count {
   color: #294967;
 }
+
+
+/* Unificación visual: tarjetas de resultados en azul grisáceo */
+#panel-search .item-card,
+#panel-stock .stock-row,
+#panel-archive .archive-card,
+#panel-archive .historico-panel .archive-card,
+#panel-dashboard .dashboard-card,
+#panel-admin .admin-tools {
+  background: #d5e0eb;
+  border: 1px solid #b7c7d7;
+  color: #173451;
+  box-shadow: 0 2px 7px rgba(20, 55, 88, .09);
+}
+#panel-archive .archive-card.editing {
+  background: #cbd9e7;
+  border-color: #168fe0;
+}
+#panel-search .item-card .item-code,
+#panel-stock .stock-row-main strong {
+  color: #123d67;
+}
+#panel-search .item-card .item-desc,
+#panel-stock .stock-row-main span,
+#panel-stock .stock-values {
+  color: #294967;
+}
+#panel-search .item-card .item-stock,
+#panel-search .item-card .item-price {
+  color: #173451;
+}
+#panel-dashboard .dashboard-card span {
+  color: #365674;
+}
+#panel-dashboard .dashboard-card strong {
+  color: #123d67;
+}
+#panel-dashboard .dashboard-card small {
+  color: #49647e;
+}
+#panel-admin .admin-tools p {
+  color: #365674;
+}
+#panel-archive .archive-card .btn-outline {
+  background: #e3ebf3;
+}
+#panel-stock .stock-values span {
+  background: #c4d4e3;
+  color: #173451;
+}
+#panel-stock .stock-values .is-low {
+  background: rgba(161, 61, 61, .15);
+  color: #963747;
+}
