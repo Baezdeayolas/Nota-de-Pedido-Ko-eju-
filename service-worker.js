@@ -1,8 +1,8 @@
-const CACHE_NAME = 'pedidos-koeju-v107';
+const CACHE_NAME = 'pedidos-koeju-v108-visual-preview-1';
 const ASSETS = [
   './',
   './index.html',
-  './style.css',
+  './style.css?v=koeju-visual-preview-1',
   './app.js',
   './cloud-sync.js',
   './data.js',
