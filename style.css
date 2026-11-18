@@ -2279,3 +2279,34 @@ main { background:#202a34; }
   .topbar { padding:7px 10px 9px; }
   .topbar-logo-image { max-height:clamp(72px, 25vw, 104px); }
 }
+
+/* Ajuste compacto: el logo ocupa el mismo alto visual que el antiguo título */
+.topbar { padding: 8px 12px 7px !important; }
+.topbar-title {
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  overflow: hidden !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.topbar-brand {
+  height: 42px !important;
+  max-height: 42px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+.topbar-logo-image {
+  width: min(100%, 240px) !important;
+  height: 42px !important;
+  max-height: 42px !important;
+  object-fit: cover !important;
+  object-position: center 50% !important;
+}
+.meta-fields { margin-top: 6px !important; }
+@media (max-width:420px) {
+  .topbar { padding: 6px 9px 6px !important; }
+  .topbar-title, .topbar-brand { height: 38px !important; min-height:38px !important; max-height:38px !important; }
+  .topbar-logo-image { width:min(100%,220px) !important; height:38px !important; max-height:38px !important; }
+}
