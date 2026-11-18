@@ -2146,13 +2146,13 @@ main { background:#202a34; }
   color: #123d67;
 }
 #panel-archive .archive-card {
-  background: #f5f8fc;
-  border: 1px solid #c2d1e0;
+  background: #dce7f1;
+  border: 1px solid #b4c6d8;
   color: #173451;
-  box-shadow: 0 2px 7px rgba(20, 55, 88, .08);
+  box-shadow: 0 2px 7px rgba(20, 55, 88, .10);
 }
 #panel-archive .archive-card.editing {
-  background: #edf5fc;
+  background: #cfdeec;
   border-color: #168fe0;
 }
 #panel-archive .archive-client {
