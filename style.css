@@ -2359,3 +2359,142 @@ main { background:#202a34; }
   background:linear-gradient(180deg,rgba(5,31,52,.82) 0%,rgba(7,43,68,.42) 68%,rgba(9,45,68,0) 100%) !important;
 }
 #panel-search .result-count { color:#e2f1ff !important; }
+
+
+/* Ko'eju — fondos fotográficos unificados en todos los menús (vista previa) */
+#panel-dashboard,
+#panel-stock,
+#panel-admin,
+#panel-archive {
+  position: relative;
+  isolation: isolate;
+  min-height: calc(100vh - 220px);
+  background: #102d47 !important;
+  color: #e5f0fb !important;
+}
+#panel-dashboard::before,
+#panel-stock::before,
+#panel-admin::before,
+#panel-archive::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg,
+      rgba(5,31,52,.88) 0%,
+      rgba(7,43,68,.76) 24%,
+      rgba(9,55,82,.58) 52%,
+      rgba(12,38,59,.82) 100%),
+    url('./Icons/ventafondo.jpg') center center / cover no-repeat;
+}
+
+/* Resumen */
+#panel-dashboard .dashboard-head h2,
+#panel-dashboard .dashboard-head p,
+#panel-dashboard .dashboard-note {
+  color: #e5f0fb !important;
+}
+#panel-dashboard .dashboard-card {
+  background: rgba(218,232,246,.93) !important;
+  border: 1px solid rgba(190,216,239,.72) !important;
+  box-shadow: 0 5px 16px rgba(0,12,28,.20) !important;
+}
+#panel-dashboard .dashboard-note {
+  background: rgba(8,35,57,.78);
+  border: 1px solid rgba(190,216,239,.24);
+  border-radius: 11px;
+  padding: 11px 12px;
+}
+
+/* Stock */
+#panel-stock .stock-import-head h2,
+#panel-stock .stock-import-head p,
+#panel-stock .stock-result-count {
+  color: #edf5ff !important;
+}
+#panel-stock .stock-updated {
+  background: rgba(8,35,57,.82) !important;
+  border: 1px solid rgba(190,216,239,.24);
+  color: #e5f0fb !important;
+}
+#panel-stock .stock-summary-card,
+#panel-stock .stock-row {
+  background: rgba(218,232,246,.94) !important;
+  border: 1px solid rgba(190,216,239,.72) !important;
+  box-shadow: 0 4px 13px rgba(0,12,28,.17);
+}
+#panel-stock .stock-controls input,
+#panel-stock .stock-controls select {
+  background: rgba(247,250,255,.97) !important;
+  color: #173451 !important;
+  border: 1px solid #aebfd2 !important;
+}
+
+/* Archivo */
+#panel-archive .search-wrap {
+  background: rgba(8,35,57,.86) !important;
+  border-bottom: 1px solid rgba(190,216,239,.25) !important;
+}
+#panel-archive #archive-search-input {
+  background: rgba(247,250,255,.97) !important;
+  color: #173451 !important;
+}
+#panel-archive .archive-summary,
+#panel-archive .archive-card,
+#panel-archive .historico-toggle {
+  background: rgba(218,232,246,.94) !important;
+  border: 1px solid rgba(190,216,239,.72) !important;
+  color: #173451 !important;
+  box-shadow: 0 4px 13px rgba(0,12,28,.16);
+}
+#panel-archive .archive-summary-label,
+#panel-archive .archive-meta,
+#panel-archive .archive-sub,
+#panel-archive .cs-meta-inline,
+#panel-archive .empty-state,
+#panel-archive .result-count {
+  color: #294967 !important;
+}
+#panel-archive .archive-summary-value,
+#panel-archive .archive-client,
+#panel-archive .archive-total {
+  color: #123d67 !important;
+}
+
+/* Administración */
+#panel-admin .admin-heading h2,
+#panel-admin .admin-heading p,
+#panel-admin .admin-tools h2,
+#panel-admin .admin-tools p {
+  color: #e5f0fb !important;
+}
+#panel-admin .admin-section,
+#panel-admin .admin-tools {
+  background: rgba(218,232,246,.95) !important;
+  border: 1px solid rgba(190,216,239,.72) !important;
+  color: #173451 !important;
+  box-shadow: 0 5px 16px rgba(0,12,28,.18) !important;
+}
+#panel-admin .admin-section h3,
+#panel-admin .admin-section label,
+#panel-admin .admin-report-row {
+  color: #173451 !important;
+}
+
+/* Pedido: refuerzo leve de la fotografía manteniendo legibles las tarjetas */
+#panel-order.area-central-pedido::before {
+  opacity: .30 !important;
+}
+#panel-order.area-central-pedido {
+  background-color: #102d47 !important;
+}
+@media (max-width: 420px) {
+  #panel-dashboard,
+  #panel-stock,
+  #panel-admin,
+  #panel-archive {
+    min-height: calc(100vh - 205px);
+  }
+}
