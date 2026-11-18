@@ -2115,3 +2115,75 @@ main { background:#202a34; }
 #panel-search .search-wrap {
   background: rgba(27, 37, 49, .88);
 }
+
+
+/* Archivo: fondo azul grisáceo y texto de alto contraste */
+#panel-archive {
+  background: #e8f0f8;
+  color: #173451;
+}
+#panel-archive .search-wrap {
+  background: #dce8f4;
+  border-bottom: 1px solid #c5d6e8;
+}
+#panel-archive #archive-search-input {
+  background: #f7faff;
+  color: #173451;
+  border: 1px solid #aebfd2;
+}
+#panel-archive #archive-search-input::placeholder {
+  color: #526b84;
+}
+#panel-archive .archive-summary {
+  background: #d5e4f2;
+  border: 1px solid #b7cadd;
+  color: #173451;
+}
+#panel-archive .archive-summary-label {
+  color: #365674;
+}
+#panel-archive .archive-summary-value {
+  color: #123d67;
+}
+#panel-archive .archive-card {
+  background: #f5f8fc;
+  border: 1px solid #c2d1e0;
+  color: #173451;
+  box-shadow: 0 2px 7px rgba(20, 55, 88, .08);
+}
+#panel-archive .archive-card.editing {
+  background: #edf5fc;
+  border-color: #168fe0;
+}
+#panel-archive .archive-client {
+  color: #102f50;
+  font-weight: 750;
+}
+#panel-archive .archive-meta,
+#panel-archive .archive-sub,
+#panel-archive .cs-meta-inline {
+  color: #3b5875;
+}
+#panel-archive .archive-total {
+  color: #0b3d6b;
+  font-weight: 800;
+}
+#panel-archive .historico-toggle {
+  background: #dce8f4;
+  border-color: #b9ccdf;
+  color: #173b5e;
+}
+#panel-archive .archive-card .btn-outline {
+  color: #174477;
+  border-color: #9fb6ce;
+  background: #e7f0f8;
+}
+#panel-archive .archive-card .btn-outline.danger {
+  color: #a52f42;
+  border-color: #d8aab2;
+  background: #fbf1f3;
+}
+#panel-archive .empty-state,
+#panel-archive .result-count {
+  color: #294967;
+}
