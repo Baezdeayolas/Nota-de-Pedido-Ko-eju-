@@ -2310,3 +2310,24 @@ main { background:#202a34; }
   .topbar-title, .topbar-brand { height: 38px !important; min-height:38px !important; max-height:38px !important; }
   .topbar-logo-image { width:min(100%,220px) !important; height:38px !important; max-height:38px !important; }
 }
+
+
+/* Integración visual del logo con el encabezado: sin rectángulo visible */
+.topbar {
+  background:
+    radial-gradient(ellipse 78% 155% at 50% 8%, rgba(18,112,166,.32) 0%, rgba(7,53,83,.22) 44%, transparent 78%),
+    linear-gradient(110deg, #03182a 0%, #04243b 32%, #062d49 50%, #04243b 68%, #03182a 100%) !important;
+  border-bottom: 1px solid rgba(70,190,232,.28) !important;
+  box-shadow: inset 0 -10px 24px rgba(0,10,24,.16), 0 5px 18px rgba(0,10,24,.2) !important;
+}
+.topbar-title, .topbar-brand {
+  background: transparent !important;
+}
+.topbar-logo-image {
+  mix-blend-mode: screen !important;
+  filter: brightness(1.12) contrast(1.06) drop-shadow(0 0 7px rgba(0,151,220,.18)) !important;
+}
+.meta-fields {
+  position: relative;
+  z-index: 1;
+}
