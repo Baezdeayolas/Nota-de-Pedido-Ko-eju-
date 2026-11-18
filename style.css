@@ -2331,3 +2331,31 @@ main { background:#202a34; }
   position: relative;
   z-index: 1;
 }
+
+
+/* Ko'eju — degradado azul marino/celeste integrado a la fotografía de Buscar */
+#panel-search {
+  position:relative !important;
+  isolation:isolate !important;
+  background:linear-gradient(180deg,#082944 0%,#103a59 38%,#1b2b36 100%) !important;
+}
+#panel-search::before {
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:-1 !important;
+  pointer-events:none !important;
+  background:
+    linear-gradient(180deg,
+      rgba(5,31,52,.96) 0%,
+      rgba(7,43,68,.86) 14%,
+      rgba(9,55,82,.56) 30%,
+      rgba(12,48,70,.30) 48%,
+      rgba(18,38,54,.54) 76%,
+      rgba(25,39,51,.94) 100%),
+    url('./Icons/ventafondo.jpg') center 44% / cover no-repeat !important;
+}
+#panel-search .search-wrap {
+  background:linear-gradient(180deg,rgba(5,31,52,.82) 0%,rgba(7,43,68,.42) 68%,rgba(9,45,68,0) 100%) !important;
+}
+#panel-search .result-count { color:#e2f1ff !important; }
