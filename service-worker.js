@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pedidos-koeju-v102';
+const CACHE_NAME = 'pedidos-koeju-v103';
 const ASSETS = [
   './',
   './index.html',
@@ -32,7 +32,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   const isAppShell = url.origin === self.location.origin &&
-    (url.pathname.endsWith('/app.js') || url.pathname.endsWith('/cloud-sync.js') || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/'));
+    (url.pathname.endsWith('/style.css') || url.pathname.endsWith('/app.js') || url.pathname.endsWith('/cloud-sync.js') || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/'));
 
   if (event.request.method !== 'GET') return;
 
