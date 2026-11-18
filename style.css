@@ -2498,3 +2498,35 @@ main { background:#202a34; }
     min-height: calc(100vh - 205px);
   }
 }
+
+
+/* Corrección: el fondo de Pedido debe cubrir toda el área visible y crecer con el contenido. */
+main { position: relative; }
+#panel-order.area-central-pedido {
+  position: relative !important;
+  isolation: isolate !important;
+  display: none;
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  background-color: #102d47 !important;
+}
+#panel-order.area-central-pedido.active {
+  display: block;
+}
+#panel-order.area-central-pedido::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+  background-image:
+    linear-gradient(180deg, rgba(5,31,52,.62), rgba(12,38,59,.68)),
+    url('./Icons/ventafondo.jpg') !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+}
+#panel-order.area-central-pedido > * {
+  position: relative;
+}
