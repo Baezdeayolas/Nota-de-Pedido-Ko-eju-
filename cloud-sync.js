@@ -45,17 +45,34 @@
     .admin-seller-chart{margin:12px 0 8px;padding:11px;background:#f7f8f5;border:1px solid #e1e6df;border-radius:9px}.admin-seller-chart h4{margin:0 0 10px;font-size:12px;color:#526057}.admin-bar-row{display:grid;grid-template-columns:minmax(74px,105px) 1fr;gap:8px;align-items:center;margin:8px 0;font-size:11px}.admin-bar-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:#36564D}.admin-bar-track{height:10px;background:#e2e7e0;border-radius:99px;overflow:hidden}.admin-bar-fill{height:100%;min-width:2px;background:#78BFE3;border-radius:99px}.admin-bar-value{grid-column:2;color:#65716a;font-size:10px;margin-top:-5px}
     .admin-user-form{display:grid;gap:8px}
     body.auth-locked > :not(#auth-gate):not(#password-recovery-layer){display:none!important}
-    #auth-gate{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;background:#203B35;min-height:100vh;box-sizing:border-box}
-    .auth-card{width:100%;max-width:390px;box-sizing:border-box;background:#fff;border-radius:16px;padding:26px;box-shadow:0 18px 50px #0004;display:grid;gap:10px;font-family:Arial,sans-serif}
-    .auth-brand{font-size:12px;letter-spacing:3px;font-weight:800;color:#A87925}.auth-card h1{margin:0;color:#203B35;font-size:23px}.auth-card p{margin:0 0 8px;color:#65716a;font-size:13px;line-height:1.45}
-    .auth-card label{font-size:13px;font-weight:700;color:#36564D}.auth-card input{width:100%;box-sizing:border-box;padding:13px;border:1px solid #cbd2ca;border-radius:8px;font-size:16px}
-    .auth-card button{margin-top:6px;padding:13px;border:0;border-radius:8px;background:#78BFE3;color:#203B35;font-size:16px;font-weight:800}.auth-card #auth-status{min-height:18px;margin-top:4px;font-size:12px}
+    #auth-gate{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:clamp(18px,4vw,36px);background:radial-gradient(ellipse at 12% 8%,rgba(0,174,255,.42),transparent 34%),radial-gradient(ellipse at 90% 88%,rgba(0,112,255,.32),transparent 38%),linear-gradient(135deg,#06142f 0%,#08285b 52%,#03132e 100%);min-height:100vh;min-height:100dvh;box-sizing:border-box;overflow:auto}
+    #auth-gate:before,#auth-gate:after{content:"";position:absolute;pointer-events:none;border:1px solid rgba(0,190,255,.28);transform:rotate(-28deg);border-radius:48%}
+    #auth-gate:before{width:125vw;height:65vh;top:-38vh;left:-36vw;box-shadow:0 0 0 22px rgba(0,150,255,.05),0 0 0 54px rgba(0,150,255,.04)}
+    #auth-gate:after{width:115vw;height:48vh;bottom:-35vh;right:-35vw;box-shadow:0 0 0 24px rgba(0,150,255,.05)}
+    .auth-card{position:relative;z-index:1;width:100%;max-width:540px;box-sizing:border-box;background:linear-gradient(145deg,#fff 0%,#f2f6ff 100%);border:1px solid rgba(255,255,255,.85);border-radius:28px;padding:clamp(26px,5vw,48px);box-shadow:0 28px 80px rgba(0,0,0,.38),0 0 0 1px rgba(0,174,255,.18);display:grid;gap:13px;font-family:Arial,sans-serif}
+    .auth-brand{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:3px;color:#082c65}
+    .auth-brand-mark{display:grid;place-items:center;width:56px;height:56px;border-radius:16px;background:linear-gradient(145deg,#09b8f4,#0750b4);color:#fff;font-size:25px;font-weight:900;letter-spacing:-3px;box-shadow:0 8px 22px rgba(0,105,210,.28)}
+    .auth-brand-name{font-size:clamp(23px,5vw,31px);font-weight:900;letter-spacing:1px;color:#092e68}.auth-brand-name span{color:#079fe0}
+    .auth-tagline{text-align:center;color:#547096;font-size:13px;letter-spacing:.2px;margin:0 0 8px}
+    .auth-card h1{margin:0;text-align:center;color:#071d46;font-size:clamp(27px,5vw,36px);letter-spacing:-.7px}
+    .auth-card .auth-intro{margin:0 0 8px;text-align:center;color:#526887;font-size:15px;line-height:1.5}
+    .auth-field{display:grid;gap:7px}
+    .auth-card label{font-size:14px;font-weight:700;color:#153765}
+    .auth-card input{width:100%;box-sizing:border-box;padding:15px 16px;border:1px solid #b8c9e8;border-radius:13px;background:rgba(255,255,255,.88);color:#10294f;font-size:16px;outline:none;transition:border-color .2s,box-shadow .2s}
+    .auth-card input:focus{border-color:#078fe0;box-shadow:0 0 0 3px rgba(0,145,230,.13)}
+    .auth-card input::placeholder{color:#8292ad}
+    .auth-card button{margin-top:5px;padding:16px;border:0;border-radius:14px;background:linear-gradient(105deg,#08aef0,#0750b6);color:#fff;font-size:18px;font-weight:800;box-shadow:0 10px 22px rgba(0,91,190,.25);transition:filter .2s,transform .2s}
+    .auth-card button:active{transform:translateY(1px);filter:brightness(.96)}
+    .auth-security{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:5px;color:#17477e;font-size:12px;font-weight:600}
+    .auth-security-mark{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#0a65c4;color:#fff;font-size:16px}
+    .auth-card #auth-status{min-height:18px;margin:0;text-align:center;color:#526887;font-size:12px;line-height:1.4}
+    @media(max-width:420px){#auth-gate{padding:16px}.auth-card{border-radius:22px;padding:25px 21px;gap:12px}.auth-brand-mark{width:48px;height:48px}.auth-card input{padding:14px}.auth-card button{padding:15px}}
   `;
   document.head.appendChild(css);
   document.body.classList.add('auth-locked');
   const gate = document.createElement('section');
   gate.id = 'auth-gate';
-  gate.innerHTML = '<form id="auth-form" class="auth-card"><div class="auth-brand">AB SYSTEM</div><h1>Pedidos Ko\'eju Rory</h1><p>Ingresá con tu correo y contraseña registrados.</p><label for="auth-email">Correo electrónico</label><input id="auth-email" type="email" required autocomplete="username" placeholder="Correo registrado"><label for="auth-password">Contraseña</label><input id="auth-password" type="password" required autocomplete="current-password" placeholder="Contraseña"><button id="auth-login" type="submit">Ingresar</button><p id="auth-status" role="status" aria-live="polite">Verificando acceso...</p></form>';
+  gate.innerHTML = '<form id="auth-form" class="auth-card"><div class="auth-brand"><div class="auth-brand-mark" aria-hidden="true">AB</div><div class="auth-brand-name">AB <span>SYSTEM</span></div></div><p class="auth-tagline">Tecnología que impulsa tu negocio</p><h1>Iniciar Sesión</h1><p class="auth-intro">Ingresá con tu correo y contraseña</p><div class="auth-field"><label for="auth-email">Correo electrónico</label><input id="auth-email" type="email" required autocomplete="username" placeholder="Correo registrado"></div><div class="auth-field"><label for="auth-password">Contraseña</label><input id="auth-password" type="password" required autocomplete="current-password" placeholder="Contraseña"></div><button id="auth-login" type="submit">Ingresar</button><div class="auth-security"><span class="auth-security-mark" aria-hidden="true">✓</span><span>Acceso seguro a tu plataforma</span></div><p id="auth-status" role="status" aria-live="polite">Verificando acceso...</p></form>';
   document.body.appendChild(gate);
   const bar = document.createElement('section');
   bar.className = 'cloud-bar';
