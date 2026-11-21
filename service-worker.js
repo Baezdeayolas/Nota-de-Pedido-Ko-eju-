@@ -1,10 +1,10 @@
-const CACHE_NAME = 'pedidos-koeju-v109-pedido-fondo-2';
+const CACHE_NAME = 'pedidos-koeju-v110-ab-system-login-1';
 const ASSETS = [
   './',
   './index.html',
   './style.css?v=koeju-pedido-fondo-2',
   './app.js',
-  './cloud-sync.js',
+  './cloud-sync.js?v=ab-system-login-1',
   './data.js',
   './clientes.js',
   './manifest.json',
